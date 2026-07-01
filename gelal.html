@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gel-Al | Highly Boof</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  :root{
+    --bg: #0a0a0f;
+    --glass: rgba(255,255,255,0.05);
+    --glass-border: rgba(255,255,255,0.10);
+    --indigo: #6366f1;
+    --violet: #8b5cf6;
+    --text: #f2f2f7;
+    --text-dim: #9797a8;
+    --radius: 20px;
+  }
+
+  *{ box-sizing: border-box; margin:0; padding:0; }
+
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(99,102,241,0.16), transparent 45%),
+      radial-gradient(circle at 85% 20%, rgba(139,92,246,0.14), transparent 40%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 110px; /* sepet barına yer aç */
+  }
+
+  header{
+    padding: 40px 24px 24px;
+    text-align: center;
+  }
+
+  .star{
+    color: var(--violet);
+    font-size: 20px;
+    display:block;
+    margin-bottom: 8px;
+  }
+
+  .geri-link{
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 18px;
+    z-index: 50;
+  }
+
+  h1#restoran-adi{
+    font-family:'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(28px, 6vw, 40px);
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, #fff, #c4c4ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  header p{
+    color: var(--text-dim);
+    margin-top: 8px;
+    font-size: 14px;
+  }
+
+  main{
+    max-width: 900px;
+    margin: 24px auto 0;
+    padding: 0 24px;
+  }
+
+  #urunler-listesi{
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .urun-card{
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(14px);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px;
+  }
+
+  .urun-img{
+    width: 78px;
+    height: 78px;
+    border-radius: 14px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, #1a1a24, #23233a);
+  }
+
+  .urun-info{
+    flex: 1;
+    min-width: 0;
+  }
+
+  .urun-info h3{
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 3px;
+  }
+
+  .urun-info p{
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .urun-fiyat{
+    font-weight: 700;
+    color: #fff;
+    margin-top: 6px;
+    font-size: 14px;
+  }
+
+  .btn-ekle{
+    flex-shrink: 0;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(90deg, var(--indigo), var(--violet));
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity .2s, transform .15s;
+  }
+  .btn-ekle:active{ transform: scale(0.95); }
+  .btn-ekle.eklendi{
+    background: #16a34a;
+  }
+
+  .state{
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+  }
+  .state .star{ margin-bottom: 14px; }
+  .state h3{
+    font-family:'Syne', sans-serif;
+    color: var(--text);
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .skeleton-row{
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    height: 106px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{ opacity:.5 } 50%{ opacity:.9 } }
+
+  /* Sepet barı */
+  #sepet-bar{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 20px;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    background: rgba(16,16,24,0.85);
+    border-top: 1px solid var(--glass-border);
+    backdrop-filter: blur(20px);
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    z-index: 100;
+    transform: translateY(100%);
+    transition: transform .3s ease;
+  }
+  #sepet-bar.gorunur{
+    display: flex;
+    transform: translateY(0);
+  }
+
+  .sepet-ozet{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .sepet-ozet .adet{
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .sepet-ozet .tutar{
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 18px;
+  }
+
+  #sepete-git{
+    padding: 13px 22px;
+    border-radius: 14px;
+    background: linear-gradient(90deg, var(--indigo), var(--violet));
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .btn-ekle, #sepet-bar{ transition: none; }
+    .skeleton-row{ animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<a class="geri-link" href="index.html" aria-label="Ana sayfaya dön">←</a>
+
+<header>
+  <span class="star">✦</span>
+  <h1 id="restoran-adi">Yükleniyor...</h1>
+  <p>Gel-Al menüsü</p>
+</header>
+
+<main>
+  <div id="urunler-listesi">
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+  </div>
+</main>
+
+<div id="sepet-bar">
+  <div class="sepet-ozet">
+    <span class="adet" id="sepet-adet">0 ürün</span>
+    <span class="tutar" id="sepet-tutar">0 ₺</span>
+  </div>
+  <a id="sepete-git" href="#">Sepete Git</a>
+</div>
+
+<script>
+  // --- Supabase bağlantısı ---
+  const SUPABASE_URL = 'https://ttuxfivcwdpyvhmybbna.supabase.co';
+  const SUPABASE_ANON_KEY = 'SENIN_ANON_KEY_BURAYA';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ŞABLON: ürün tablosunun gerçek adını buraya yaz
+  const URUNLER_TABLOSU = 'boof_urunler';
+
+  const restoranAdiEl = document.getElementById('restoran-adi');
+  const urunlerEl = document.getElementById('urunler-listesi');
+  const sepetBarEl = document.getElementById('sepet-bar');
+  const sepetAdetEl = document.getElementById('sepet-adet');
+  const sepetTutarEl = document.getElementById('sepet-tutar');
+  const sepeteGitEl = document.getElementById('sepete-git');
+
+  // --- 1. Adım: URL'den restoran_id'yi güvenli oku ---
+  function restoranIdAl(){
+    const params = new URLSearchParams(window.location.search);
+    const ham = params.get('restoran_id');
+    const id = Number(ham);
+    if (!ham || Number.isNaN(id) || id <= 0){
+      return null;
+    }
+    return id;
+  }
+
+  const restoranId = restoranIdAl();
+  if (restoranId === null){
+    // Geçerli ID yok -> ana sayfaya yönlendir
+    window.location.href = 'index.html';
+  }
+
+  // --- localStorage sepet yardımcıları ---
+  const SEPET_ANAHTARI = 'boof_sepet';
+
+  function sepetiOku(){
+    try{
+      const ham = localStorage.getItem(SEPET_ANAHTARI);
+      return ham ? JSON.parse(ham) : [];
+    }catch(e){
+      return [];
+    }
+  }
+
+  function sepetiYaz(sepet){
+    localStorage.setItem(SEPET_ANAHTARI, JSON.stringify(sepet));
+  }
+
+  function sepeteEkle(urun){
+    const sepet = sepetiOku();
+    const mevcut = sepet.find(s => s.urun_id === urun.id && s.restoran_id === restoranId);
+    if (mevcut){
+      mevcut.adet += 1;
+    } else {
+      sepet.push({
+        urun_id: urun.id,
+        restoran_id: restoranId,
+        isim: urun.isim,
+        fiyat: Number(urun.fiyat) || 0,
+        adet: 1
+      });
+    }
+    sepetiYaz(sepet);
+    sepetBariGuncelle();
+  }
+
+  function sepetBariGuncelle(){
+    const sepet = sepetiOku().filter(s => s.restoran_id === restoranId);
+    const toplamAdet = sepet.reduce((acc, s) => acc + s.adet, 0);
+    const toplamTutar = sepet.reduce((acc, s) => acc + (s.fiyat * s.adet), 0);
+
+    if (toplamAdet > 0){
+      sepetBarEl.classList.add('gorunur');
+      sepetAdetEl.textContent = `${toplamAdet} ürün`;
+      sepetTutarEl.textContent = `${toplamTutar.toFixed(2)} ₺`;
+      sepeteGitEl.href = `sepetim.html?restoran_id=${restoranId}`;
+    } else {
+      sepetBarEl.classList.remove('gorunur');
+    }
+  }
+
+  function durumGoster(baslik, aciklama){
+    urunlerEl.innerHTML = `
+      <div class="state">
+        <span class="star">✦</span>
+        <h3>${baslik}</h3>
+        <p>${aciklama}</p>
+      </div>`;
+  }
+
+  function urunKartOlustur(urun){
+    const gorsel = urun.gorsel_url || '';
+    const isim = urun.isim || 'İsimsiz ürün';
+    const aciklama = urun.aciklama || '';
+    const fiyat = urun.fiyat != null ? Number(urun.fiyat).toFixed(2) : '0.00';
+
+    const kart = document.createElement('div');
+    kart.className = 'urun-card';
+    kart.innerHTML = `
+      <img class="urun-img" src="${gorsel}" alt="${isim}" loading="lazy" onerror="this.style.display='none'">
+      <div class="urun-info">
+        <h3>${isim}</h3>
+        <p>${aciklama}</p>
+        <div class="urun-fiyat">${fiyat} ₺</div>
+      </div>
+      <button class="btn-ekle">Sepete Ekle</button>
+    `;
+
+    const btn = kart.querySelector('.btn-ekle');
+    btn.addEventListener('click', () => {
+      sepeteEkle(urun);
+      btn.textContent = 'Eklendi ✓';
+      btn.classList.add('eklendi');
+      setTimeout(() => {
+        btn.textContent = 'Sepete Ekle';
+        btn.classList.remove('eklendi');
+      }, 900);
+    });
+
+    return kart;
+  }
+
+  // --- 2. Adım: Restoran adını çek ---
+  async function restoraniGetir(){
+    const { data, error } = await supabase
+      .from('boof_venues')
+      .select('id, isim')
+      .eq('id', restoranId)
+      .single();
+
+    if (error || !data){
+      restoranAdiEl.textContent = 'Dükkan bulunamadı';
+      durumGoster('Dükkan bulunamadı', 'Bu ID ile eşleşen bir dükkan yok. Ana sayfaya dönüp tekrar dene.');
+      return false;
+    }
+
+    restoranAdiEl.textContent = data.isim || 'İsimsiz Dükkan';
+    return true;
+  }
+
+  // --- 3. Adım: Ürünleri çek ---
+  async function urunleriGetir(){
+    try{
+      const { data, error } = await supabase
+        .from(URUNLER_TABLOSU)
+        .select('*')
+        .eq('restoran_id', restoranId)
+        .order('id', { ascending: true });
+
+      if (error) throw error;
+
+      if (!data || !data.length){
+        durumGoster('Menü boş', 'Bu dükkan henüz ürün eklememiş.');
+        return;
+      }
+
+      urunlerEl.innerHTML = '';
+      data.forEach(u => urunlerEl.appendChild(urunKartOlustur(u)));
+
+    } catch(err){
+      console.error('Ürünler çekilemedi:', err);
+      durumGoster('Bir şeyler ters gitti', 'Menü yüklenemedi, sayfayı yenilemeyi dene.');
+    }
+  }
+
+  async function baslat(){
+    if (restoranId === null) return;
+    const restoranVarMi = await restoraniGetir();
+    if (restoranVarMi){
+      await urunleriGetir();
+    }
+    sepetBariGuncelle();
+  }
+
+  document.addEventListener('DOMContentLoaded', baslat);
+</script>
+
+</body>
+</html>
