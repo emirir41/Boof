@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Siparişler | Highly Boof</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400..800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  :root{
+    --bg: #0a0a0f;
+    --glass: rgba(255,255,255,0.05);
+    --glass-border: rgba(255,255,255,0.10);
+    --indigo: #6366f1;
+    --violet: #8b5cf6;
+    --text: #f2f2f7;
+    --text-dim: #9797a8;
+    --warn: #facc15;
+    --success: #22c55e;
+    --radius: 20px;
+  }
+
+  *{ box-sizing: border-box; margin:0; padding:0; }
+
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(99,102,241,0.16), transparent 45%),
+      radial-gradient(circle at 85% 20%, rgba(139,92,246,0.14), transparent 40%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding-bottom: 60px;
+  }
+
+  header{
+    padding: 36px 24px 20px;
+    text-align: center;
+  }
+
+  .star{
+    color: var(--violet);
+    font-size: 20px;
+    display:block;
+    margin-bottom: 8px;
+  }
+
+  h1{
+    font-family:'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(26px, 5.5vw, 36px);
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, #fff, #c4c4ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .durum-satiri{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .canli-nokta{
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 0 rgba(34,197,94,0.6);
+    animation: nabiz 1.8s infinite;
+  }
+  @keyframes nabiz{
+    0%{ box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+    70%{ box-shadow: 0 0 0 7px rgba(34,197,94,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+  }
+
+  /* Sekmeler */
+  .sekmeler{
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .sekme-btn{
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass);
+    color: var(--text-dim);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sekme-btn.aktif{
+    color: #fff;
+    border-color: rgba(139,92,246,0.5);
+    background: linear-gradient(90deg, rgba(99,102,241,0.25), rgba(139,92,246,0.25));
+  }
+
+  .badge{
+    background: rgba(255,255,255,0.12);
+    padding: 1px 7px;
+    border-radius: 8px;
+    font-size: 11px;
+  }
+
+  main{
+    max-width: 720px;
+    margin: 24px auto 0;
+    padding: 0 24px;
+  }
+
+  #siparis-listesi{
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .siparis-karti{
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(14px);
+    padding: 18px;
+    animation: girisAnim .35s ease;
+  }
+  @keyframes girisAnim{
+    from{ opacity: 0; transform: translateY(8px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+
+  .karti-ust{
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .karti-ust .sol{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .siparis-no{
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .siparis-saat{
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .durum-etiket{
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+  .durum-yeni{ background: rgba(239,68,68,0.18); color: #f87171; }
+  .durum-hazirlaniyor{ background: rgba(250,204,21,0.18); color: var(--warn); }
+  .durum-tamamlandi{ background: rgba(34,197,94,0.18); color: var(--success); }
+
+  .urun-detay{
+    border-top: 1px solid var(--glass-border);
+    border-bottom: 1px solid var(--glass-border);
+    padding: 10px 0;
+    margin: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .urun-satir{
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .urun-satir .u-isim{ color: var(--text); }
+  .urun-satir .u-adet{ color: var(--text-dim); }
+
+  .siparis-not{
+    font-size: 13px;
+    color: var(--text-dim);
+    background: rgba(255,255,255,0.03);
+    border-left: 2px solid var(--violet);
+    padding: 8px 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+
+  .karti-alt{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .toplam-tutar{
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 17px;
+  }
+
+  .aksiyon-btnler{
+    display: flex;
+    gap: 8px;
+  }
+
+  .aksiyon-btn{
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: none;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    transition: opacity .2s, transform .15s;
+  }
+  .aksiyon-btn:active{ transform: scale(0.95); }
+
+  .btn-hazirlaniyor{
+    background: rgba(250,204,21,0.16);
+    color: var(--warn);
+    border: 1px solid rgba(250,204,21,0.35);
+  }
+  .btn-tamamlandi{
+    background: linear-gradient(90deg, var(--indigo), var(--violet));
+    color: #fff;
+  }
+
+  .state{
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-dim);
+  }
+  .state .star{ margin-bottom: 14px; }
+  .state h3{
+    font-family:'Syne', sans-serif;
+    color: var(--text);
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+
+  .skeleton-row{
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    height: 150px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{ opacity:.5 } 50%{ opacity:.9 } }
+
+  @media (prefers-reduced-motion: reduce){
+    .siparis-karti{ animation: none; }
+    .canli-nokta{ animation: none; }
+    .skeleton-row{ animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="star">✦</span>
+  <h1>Siparişler</h1>
+  <div class="durum-satiri">
+    <span class="canli-nokta"></span>
+    <span>Canlı bağlantı aktif</span>
+  </div>
+
+  <div class="sekmeler">
+    <button class="sekme-btn aktif" data-sekme="aktif">
+      Aktif <span class="badge" id="aktif-sayi">0</span>
+    </button>
+    <button class="sekme-btn" data-sekme="gecmis">
+      Geçmiş <span class="badge" id="gecmis-sayi">0</span>
+    </button>
+  </div>
+</header>
+
+<main>
+  <div id="siparis-listesi">
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+  </div>
+</main>
+
+<script>
+  // --- Supabase bağlantısı ---
+  const SUPABASE_URL = 'https://ttuxfivcwdpyvhmybbna.supabase.co';
+  const SUPABASE_ANON_KEY = 'SENIN_ANON_KEY_BURAYA';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const listeEl = document.getElementById('siparis-listesi');
+  const sekmeBtnler = document.querySelectorAll('.sekme-btn');
+  const aktifSayiEl = document.getElementById('aktif-sayi');
+  const gecmisSayiEl = document.getElementById('gecmis-sayi');
+
+  let aktifSekme = 'aktif';
+  let siparisler = []; // hafızadaki tüm siparişler (bu restorana ait)
+
+  // --- 1. Adım: URL'den restoran_id oku ---
+  function restoranIdAl(){
+    const params = new URLSearchParams(window.location.search);
+    const ham = params.get('restoran_id');
+    const id = Number(ham);
+    if (!ham || Number.isNaN(id) || id <= 0) return null;
+    return id;
+  }
+
+  const restoranId = restoranIdAl();
+  if (restoranId === null){
+    window.location.href = 'index.html';
+  }
+
+  function durumEtiket(status){
+    if (status === 'tamamlandi') return { sinif: 'durum-tamamlandi', metin: 'Tamamlandı' };
+    if (status === 'hazirlaniyor') return { sinif: 'durum-hazirlaniyor', metin: 'Hazırlanıyor' };
+    return { sinif: 'durum-yeni', metin: 'Yeni' };
+  }
+
+  function saatFormatla(iso){
+    try{
+      return new Date(iso).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    }catch(e){ return ''; }
+  }
+
+  function durumGoster(baslik, aciklama){
+    listeEl.innerHTML = `
+      <div class="state">
+        <span class="star">✦</span>
+        <h3>${baslik}</h3>
+        <p>${aciklama}</p>
+      </div>`;
+  }
+
+  function kartOlustur(siparis){
+    const etiket = durumEtiket(siparis.status);
+    const items = Array.isArray(siparis.items) ? siparis.items : [];
+
+    const urunSatirlari = items.map(u => `
+      <div class="urun-satir">
+        <span class="u-isim">${u.isim || 'Ürün'}</span>
+        <span class="u-adet">x${u.adet || 1}</span>
+      </div>
+    `).join('');
+
+    const notBlok = siparis.note
+      ? `<div class="siparis-not">"${siparis.note}"</div>`
+      : '';
+
+    let aksiyonlar = '';
+    if (siparis.status === 'yeni'){
+      aksiyonlar = `<button class="aksiyon-btn btn-hazirlaniyor" data-aksiyon="hazirlaniyor">Hazırlanıyor</button>
+                     <button class="aksiyon-btn btn-tamamlandi" data-aksiyon="tamamlandi">Tamamlandı</button>`;
+    } else if (siparis.status === 'hazirlaniyor'){
+      aksiyonlar = `<button class="aksiyon-btn btn-tamamlandi" data-aksiyon="tamamlandi">Tamamlandı</button>`;
+    }
+
+    const kart = document.createElement('div');
+    kart.className = 'siparis-karti';
+    kart.dataset.id = siparis.id;
+    kart.innerHTML = `
+      <div class="karti-ust">
+        <div class="sol">
+          <span class="siparis-no">Sipariş #${siparis.id}</span>
+          <span class="siparis-saat">${saatFormatla(siparis.created_at)}</span>
+        </div>
+        <span class="durum-etiket ${etiket.sinif}">${etiket.metin}</span>
+      </div>
+
+      ${notBlok}
+
+      <div class="urun-detay">
+        ${urunSatirlari || '<div class="urun-satir"><span class="u-isim">Ürün detayı yok</span></div>'}
+      </div>
+
+      <div class="karti-alt">
+        <span class="toplam-tutar">${Number(siparis.total_amount || 0).toFixed(2)} ₺</span>
+        <div class="aksiyon-btnler">${aksiyonlar}</div>
+      </div>
+    `;
+
+    kart.querySelectorAll('[data-aksiyon]').forEach(btn => {
+      btn.addEventListener('click', () => statusGuncelle(siparis.id, btn.dataset.aksiyon));
+    });
+
+    return kart;
+  }
+
+  function ciz(){
+    const aktifListe = siparisler
+      .filter(s => s.status !== 'tamamlandi')
+      .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)); // eski önce (mutfak sırası)
+
+    const gecmisListe = siparisler
+      .filter(s => s.status === 'tamamlandi')
+      .sort((a,b) => new Date(b.created_at) - new Date(a.created_at)); // yeni önce
+
+    aktifSayiEl.textContent = aktifListe.length;
+    gecmisSayiEl.textContent = gecmisListe.length;
+
+    const gosterilecek = aktifSekme === 'aktif' ? aktifListe : gecmisListe;
+
+    listeEl.innerHTML = '';
+
+    if (!gosterilecek.length){
+      const bosMesaj = aktifSekme === 'aktif'
+        ? { b: 'Bekleyen sipariş yok', a: 'Yeni sipariş geldiğinde burada anında görünecek.' }
+        : { b: 'Geçmiş boş', a: 'Tamamlanan siparişler burada birikecek.' };
+      durumGoster(bosMesaj.b, bosMesaj.a);
+      return;
+    }
+
+    gosterilecek.forEach(s => listeEl.appendChild(kartOlustur(s)));
+  }
+
+  sekmeBtnler.forEach(btn => {
+    btn.addEventListener('click', () => {
+      sekmeBtnler.forEach(b => b.classList.remove('aktif'));
+      btn.classList.add('aktif');
+      aktifSekme = btn.dataset.sekme;
+      ciz();
+    });
+  });
+
+  // --- Status güncelleme (esnaf butonlarına basınca) ---
+  async function statusGuncelle(siparisId, yeniStatus){
+    // İyimser güncelleme: ekranı önce güncelle, hata olursa geri al
+    const siparis = siparisler.find(s => s.id === siparisId);
+    const eskiStatus = siparis ? siparis.status : null;
+    if (siparis) siparis.status = yeniStatus;
+    ciz();
+
+    const { error } = await supabase
+      .from('boof_orders')
+      .update({ status: yeniStatus })
+      .eq('id', siparisId);
+
+    if (error){
+      console.error('Durum güncellenemedi:', error);
+      if (siparis) siparis.status = eskiStatus;
+      ciz();
+      alert('Durum güncellenemedi, tekrar dener misin?');
+    }
+  }
+
+  // --- 2. Adım: İlk siparişleri çek ---
+  async function siparisleriGetir(){
+    try{
+      const { data, error } = await supabase
+        .from('boof_orders')
+        .select('*')
+        .eq('venue_id', restoranId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      siparisler = data || [];
+      ciz();
+
+    } catch(err){
+      console.error('Siparişler çekilemedi:', err);
+      durumGoster('Bir şeyler ters gitti', 'Siparişler yüklenemedi, sayfayı yenilemeyi dene.');
+    }
+  }
+
+  // --- 3. Adım: Realtime dinleme kur ---
+  function realtimeBaslat(){
+    supabase
+      .channel('siparis-degisiklikleri-' + restoranId)
+      .on('postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'boof_orders',
+          filter: `venue_id=eq.${restoranId}`
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT'){
+            siparisler.unshift(payload.new);
+          } else if (payload.eventType === 'UPDATE'){
+            const idx = siparisler.findIndex(s => s.id === payload.new.id);
+            if (idx !== -1) siparisler[idx] = payload.new;
+            else siparisler.unshift(payload.new);
+          } else if (payload.eventType === 'DELETE'){
+            siparisler = siparisler.filter(s => s.id !== payload.old.id);
+          }
+          ciz();
+        }
+      )
+      .subscribe();
+  }
+
+  async function baslat(){
+    if (restoranId === null) return;
+    await siparisleriGetir();
+    realtimeBaslat();
+  }
+
+  document.addEventListener('DOMContentLoaded', baslat);
+</script>
+
+</body>
+</html>
