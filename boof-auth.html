@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boof - Giriş Yap / Kayıt Ol</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Syne + DM Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'DM Sans', sans-serif;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1a0a3e 100%);
+            color: #e2e8f0;
+        }
+        
+        .glass-effect {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        .gradient-button {
+            background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .gradient-button:hover {
+            background: linear-gradient(135deg, #4f46e5 0%, #9370db 100%);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+        }
+        
+        .gradient-button:active {
+            transform: scale(0.98);
+        }
+        
+        .gradient-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .role-button {
+            padding: 1.5rem;
+            border: 2px solid rgba(148, 163, 184, 0.2);
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .role-button:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .role-button.active {
+            background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+            border-color: #6366f1;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+        }
+        
+        .input-field {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            background: rgba(30, 41, 59, 0.7);
+            border-color: #6366f1;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+        
+        .input-field::placeholder {
+            color: #94a3b8;
+        }
+        
+        .mode-toggle {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: rgba(30, 41, 59, 0.5);
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+        
+        .toggle-btn {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-btn.active {
+            background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.875rem;
+        }
+        
+        .error-message.show { display: block; }
+        
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: #86efac;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+            font-size: 0.875rem;
+        }
+        
+        .success-message.show { display: block; }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 0.5rem;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .star-motif {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        @media (max-width: 640px) {
+            .auth-container { padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center px-4 py-8">
+    
+    <!-- Animated background orbs -->
+    <div class="fixed inset-0 -z-10 overflow-hidden">
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-indigo-500 rounded-full blur-3xl opacity-10 animate-pulse"></div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500 rounded-full blur-3xl opacity-10 animate-pulse"></div>
+    </div>
+    
+    <!-- Auth Container -->
+    <div class="auth-container glass-effect rounded-2xl w-full max-w-md p-8 shadow-2xl">
+        
+        <!-- Logo / Branding -->
+        <div class="text-center mb-8">
+            <div class="star-motif text-center">✦</div>
+            <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                Boof
+            </h1>
+            <p class="text-sm text-slate-400">Güvenilir Yorum Platformu</p>
+        </div>
+        
+        <!-- Mode Toggle: Login / Register -->
+        <div class="mode-toggle">
+            <button class="toggle-btn active" id="loginToggle" onclick="switchMode('login')">
+                Giriş Yap
+            </button>
+            <button class="toggle-btn" id="registerToggle" onclick="switchMode('register')">
+                Kayıt Ol
+            </button>
+        </div>
+        
+        <!-- Messages -->
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+        
+        <!-- ===== LOGIN FORM ===== -->
+        <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-slate-300">E-posta</label>
+                <input 
+                    type="email" 
+                    id="loginEmail" 
+                    class="input-field w-full" 
+                    placeholder="ornek@email.com" 
+                    required
+                >
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-slate-300">Şifre</label>
+                <input 
+                    type="password" 
+                    id="loginPassword" 
+                    class="input-field w-full" 
+                    placeholder="••••••••" 
+                    required
+                >
+            </div>
+            
+            <button type="submit" id="loginSubmitBtn" class="gradient-button w-full py-3 rounded-lg font-semibold text-white mt-6">
+                <span id="loginButtonText">Giriş Yap</span>
+            </button>
+        </form>
+        
+        <!-- ===== REGISTER FORM ===== -->
+        <form id="registerForm" class="space-y-4 hidden" onsubmit="handleRegister(event)">
+            
+            <!-- Role Selection: customer / merchant -->
+            <div>
+                <label class="block text-sm font-semibold mb-3 text-slate-300">Rolünüzü Seçin</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <button 
+                        type="button" 
+                        class="role-button active" 
+                        id="customerRoleBtn" 
+                        data-role="customer"
+                        onclick="selectRole('customer')"
+                    >
+                        <div class="text-lg mb-1">👤</div>
+                        <div>Müşteriyim</div>
+                    </button>
+                    <button 
+                        type="button" 
+                        class="role-button" 
+                        id="merchantRoleBtn" 
+                        data-role="merchant"
+                        onclick="selectRole('merchant')"
+                    >
+                        <div class="text-lg mb-1">🏢</div>
+                        <div>Esnafım</div>
+                    </button>
+                </div>
+                <!-- Bu değer profiles.role sütununa yazılacak -->
+                <input type="hidden" id="selectedRole" value="customer">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-slate-300">Kullanıcı Adı</label>
+                <input 
+                    type="text" 
+                    id="registerUsername" 
+                    class="input-field w-full" 
+                    placeholder="kullaniciadi" 
+                    required
+                >
+                <p class="text-xs text-slate-400 mt-1">profiles.username sütununa yazılır</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-slate-300">Ad Soyad</label>
+                <input 
+                    type="text" 
+                    id="registerFullName" 
+                    class="input-field w-full" 
+                    placeholder="Adınız Soyadınız" 
+                    required
+                >
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-slate-300">E-posta</label>
+                <input 
+                    type="email" 
+                    id="registerEmail" 
+                    class="input-field w-full" 
+                    placeholder="ornek@email.com" 
+                    required
+                >
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-slate-300">Şifre</label>
+                <input 
+                    type="password" 
+                    id="registerPassword" 
+                    class="input-field w-full" 
+                    placeholder="••••••••" 
+                    minlength="6"
+                    required
+                >
+                <p class="text-xs text-slate-400 mt-1">En az 6 karakter</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-semibold mb-2 text-slate-300">Şifre Tekrar</label>
+                <input 
+                    type="password" 
+                    id="registerPasswordConfirm" 
+                    class="input-field w-full" 
+                    placeholder="••••••••" 
+                    required
+                >
+            </div>
+            
+            <label class="flex items-center gap-2 text-sm text-slate-400 cursor-pointer mt-2">
+                <input type="checkbox" id="termsCheckbox" class="rounded" required>
+                <span>Hüküm ve Koşulları kabul ediyorum</span>
+            </label>
+            
+            <button type="submit" id="registerSubmitBtn" class="gradient-button w-full py-3 rounded-lg font-semibold text-white mt-6">
+                <span id="registerButtonText">Kayıt Ol</span>
+            </button>
+        </form>
+        
+        <!-- Footer -->
+        <p class="text-center text-xs text-slate-500 mt-6">
+            © 2026 Highly - Her hakkı saklıdır.
+        </p>
+    </div>
+    
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // ==========================================================
+        // CONFIGURATION
+        // ==========================================================
+        const SUPABASE_URL = 'https://ttuxfivcwdpyvhmybbna.supabase.co';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE'; // <-- Gerçek anon key ile değiştir
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ==========================================================
+        // STATE
+        // ==========================================================
+        let selectedRole = 'customer'; // 'customer' | 'merchant' -> profiles.role
+
+        // ==========================================================
+        // UI HELPERS
+        // ==========================================================
+        function switchMode(mode) {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const loginToggle = document.getElementById('loginToggle');
+            const registerToggle = document.getElementById('registerToggle');
+
+            clearMessages();
+
+            if (mode === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                loginToggle.classList.add('active');
+                registerToggle.classList.remove('active');
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                loginToggle.classList.remove('active');
+                registerToggle.classList.add('active');
+            }
+        }
+
+        function selectRole(role) {
+            selectedRole = role;
+            document.getElementById('selectedRole').value = role;
+
+            document.getElementById('customerRoleBtn').classList.toggle('active', role === 'customer');
+            document.getElementById('merchantRoleBtn').classList.toggle('active', role === 'merchant');
+        }
+
+        function showError(message) {
+            const el = document.getElementById('errorMessage');
+            el.textContent = message;
+            el.classList.add('show');
+            document.getElementById('successMessage').classList.remove('show');
+        }
+
+        function showSuccess(message) {
+            const el = document.getElementById('successMessage');
+            el.textContent = message;
+            el.classList.add('show');
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        function clearMessages() {
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('successMessage').classList.remove('show');
+        }
+
+        function setLoading(isLoading, buttonId, textId, defaultText) {
+            const button = document.getElementById(buttonId);
+            const textSpan = document.getElementById(textId);
+            button.disabled = isLoading;
+            textSpan.innerHTML = isLoading
+                ? '<span class="loading-spinner"></span>Yükleniyor...'
+                : defaultText;
+        }
+
+        // ==========================================================
+        // AUTH: GİRİŞ YAP (supabase.auth.signInWithPassword)
+        // ==========================================================
+        async function handleLogin(event) {
+            event.preventDefault();
+            clearMessages();
+
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showError('Lütfen tüm alanları doldurunuz.');
+                return;
+            }
+
+            setLoading(true, 'loginSubmitBtn', 'loginButtonText', 'Giriş Yap');
+
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) {
+                showError('Giriş başarısız: ' + error.message);
+                setLoading(false, 'loginSubmitBtn', 'loginButtonText', 'Giriş Yap');
+                return;
+            }
+
+            showSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
+
+            // TODO: kendi dashboard/panel URL'ini buraya yaz
+            setTimeout(() => {
+                window.location.href = '/dashboard';
+            }, 1200);
+        }
+
+        // ==========================================================
+        // AUTH: KAYIT OL (supabase.auth.signUp) + profiles INSERT
+        // ==========================================================
+        async function handleRegister(event) {
+            event.preventDefault();
+            clearMessages();
+
+            const username = document.getElementById('registerUsername').value.trim();
+            const fullName = document.getElementById('registerFullName').value.trim();
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+            const termsAccepted = document.getElementById('termsCheckbox').checked;
+            const role = selectedRole; // 'customer' | 'merchant'
+
+            // --- Validasyon ---
+            if (!username || !fullName || !email || !password) {
+                showError('Lütfen tüm alanları doldurunuz.');
+                return;
+            }
+            if (password !== passwordConfirm) {
+                showError('Şifreler eşleşmiyor.');
+                return;
+            }
+            if (password.length < 6) {
+                showError('Şifre en az 6 karakter olmalıdır.');
+                return;
+            }
+            if (!termsAccepted) {
+                showError('Hüküm ve Koşulları kabul etmelisiniz.');
+                return;
+            }
+
+            setLoading(true, 'registerSubmitBtn', 'registerButtonText', 'Kayıt Ol');
+
+            // 1) Supabase Auth üzerinden kullanıcı oluştur
+            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                email: email,
+                password: password
+            });
+
+            if (signUpError) {
+                showError('Kayıt başarısız: ' + signUpError.message);
+                setLoading(false, 'registerSubmitBtn', 'registerButtonText', 'Kayıt Ol');
+                return;
+            }
+
+            const newUserId = signUpData.user.id; // auth.users.id (UUID)
+
+            // 2) profiles tablosuna INSERT
+            // Şema: id (UUID), username (text), full_name (text),
+            //       role (enum: 'admin' | 'merchant' | 'customer'), total_xp (integer)
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert([
+                    {
+                        id: newUserId,
+                        username: username,
+                        full_name: fullName,
+                        role: role,
+                        total_xp: 0
+                    }
+                ]);
+
+            if (profileError) {
+                console.error('Profil oluşturma hatası:', profileError);
+                showError('Hesap oluşturuldu ancak profil kaydedilemedi: ' + profileError.message);
+                setLoading(false, 'registerSubmitBtn', 'registerButtonText', 'Kayıt Ol');
+                return;
+            }
+
+            showSuccess('Kayıt başarılı! E-postanızı onaylayın.');
+
+            document.getElementById('registerForm').reset();
+            selectRole('customer');
+            setLoading(false, 'registerSubmitBtn', 'registerButtonText', 'Kayıt Ol');
+
+            setTimeout(() => {
+                switchMode('login');
+            }, 1800);
+        }
+
+        // ==========================================================
+        // OTURUM KONTROLÜ
+        // ==========================================================
+        async function checkAuthStatus() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                console.log('Aktif oturum bulundu:', session.user);
+                // window.location.href = '/dashboard';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthStatus();
+            switchMode('login');
+        });
+    </script>
+</body>
+</html>
