@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boof - Dükkan Detayı</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Syne + DM Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * { font-family: 'DM Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1a0a3e 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .glass-effect {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        /* ===== Top Bar ===== */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            z-index: 30;
+        }
+
+        .back-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .back-btn:hover {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        /* ===== Shop Header ===== */
+        .shop-hero {
+            background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(167,139,250,0.1) 100%);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            padding: 2rem 1.5rem;
+            text-align: center;
+        }
+
+        .category-tag {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            margin-top: 0.4rem;
+        }
+
+        .big-rating {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.75rem;
+            font-weight: 800;
+            color: #fbbf24;
+            line-height: 1;
+            margin-top: 1rem;
+        }
+
+        .rating-stars-display {
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            margin-top: 0.25rem;
+        }
+
+        /* ===== Review Form ===== */
+        .review-form-card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 16px;
+            padding: 1.25rem;
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.1);
+        }
+
+        .star-picker {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+
+        .star-btn {
+            font-size: 2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: rgba(148, 163, 184, 0.3);
+            transition: all 0.2s ease;
+            line-height: 1;
+        }
+
+        .star-btn.active {
+            color: #fbbf24;
+            filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
+            transform: scale(1.1);
+        }
+
+        .comment-textarea {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #e2e8f0;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            width: 100%;
+            resize: none;
+            transition: all 0.25s ease;
+        }
+
+        .comment-textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .comment-textarea::placeholder { color: #94a3b8; }
+
+        .char-counter {
+            text-align: right;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+
+        .char-counter.warning { color: #fbbf24; }
+        .char-counter.limit { color: #ef4444; }
+
+        .gradient-button {
+            background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+            transition: all 0.3s ease;
+        }
+
+        .gradient-button:hover {
+            background: linear-gradient(135deg, #4f46e5 0%, #9370db 100%);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .gradient-button:active { transform: scale(0.98); }
+
+        .gradient-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* ===== Locked review banner ===== */
+        .locked-banner {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px dashed rgba(148, 163, 184, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        /* ===== Verified expiry countdown ===== */
+        .expiry-note {
+            font-size: 0.7rem;
+            color: #a5b4fc;
+            text-align: center;
+            margin-top: 0.75rem;
+        }
+
+        /* ===== Review Cards ===== */
+        .review-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 14px;
+            padding: 1rem;
+        }
+
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: #86efac;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.15rem 0.55rem;
+            border-radius: 999px;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.35);
+        }
+
+        .review-avatar {
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .review-stars { color: #fbbf24; font-size: 0.9rem; letter-spacing: 1px; }
+
+        /* ===== Skeleton / Empty / Error ===== */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(51,65,85,0.4) 25%, rgba(71,85,105,0.5) 37%, rgba(51,65,85,0.4) 63%);
+            background-size: 400% 100%;
+            animation: skeleton-loading 1.4s ease infinite;
+            border-radius: 14px;
+            height: 90px;
+        }
+
+        @keyframes skeleton-loading {
+            0% { background-position: 100% 50%; }
+            100% { background-position: 0 50%; }
+        }
+
+        .empty-state, .error-state {
+            display: none;
+            text-align: center;
+            padding: 2.5rem 1rem;
+            color: #94a3b8;
+        }
+
+        .empty-state.show, .error-state.show { display: block; }
+
+        .status-message {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-message.show { display: flex; }
+
+        .status-message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+        }
+
+        .status-message.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: #86efac;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- ===== TOP BAR ===== -->
+    <div class="top-bar">
+        <button class="back-btn" onclick="window.history.back()" aria-label="Geri dön">
+            <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </button>
+        <h1 class="text-base font-bold text-slate-100 truncate">Dükkan Detayı</h1>
+    </div>
+
+    <!-- ===== SHOP HERO (Künye) ===== -->
+    <section class="shop-hero" id="shopHero">
+        <div id="shopHeroSkeleton">
+            <div class="skeleton mb-3" style="height:28px; max-width:220px; margin:0 auto;"></div>
+            <div class="skeleton" style="height:20px; max-width:120px; margin:0.5rem auto 0;"></div>
+        </div>
+        <div id="shopHeroContent" class="hidden">
+            <h2 class="text-2xl font-bold text-slate-100" id="shopName">—</h2>
+            <span class="category-tag" id="shopCategory">—</span>
+            <div class="big-rating" id="bigRating">—</div>
+            <div class="rating-stars-display" id="ratingStarsDisplay"></div>
+            <p class="text-xs text-slate-400 mt-1" id="reviewCountText"></p>
+        </div>
+    </section>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="max-w-2xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- Status Messages -->
+        <div class="status-message error" id="errorMessage">
+            <span>⚠️</span><span id="errorText"></span>
+        </div>
+        <div class="status-message success" id="successMessage">
+            <span>✅</span><span id="successText"></span>
+        </div>
+
+        <!-- ===== YORUM YAPMA ALANI ===== -->
+        <div id="reviewFormSection">
+            <!-- QR doğrulamasıyla gelmişse bu kart gösterilir -->
+            <div class="review-form-card hidden" id="reviewFormCard">
+                <h3 class="font-bold text-slate-100 mb-1">✦ Yorumunu Paylaş</h3>
+                <p class="text-xs text-slate-400 mb-3">Bu dükkanı QR ile doğruladın, deneyimini anlat!</p>
+
+                <div class="star-picker" id="starPicker">
+                    <button type="button" class="star-btn" data-value="1" onclick="setRating(1)">★</button>
+                    <button type="button" class="star-btn" data-value="2" onclick="setRating(2)">★</button>
+                    <button type="button" class="star-btn" data-value="3" onclick="setRating(3)">★</button>
+                    <button type="button" class="star-btn" data-value="4" onclick="setRating(4)">★</button>
+                    <button type="button" class="star-btn" data-value="5" onclick="setRating(5)">★</button>
+                </div>
+
+                <textarea
+                    id="commentInput"
+                    class="comment-textarea"
+                    rows="4"
+                    maxlength="500"
+                    placeholder="Deneyimini kısaca anlat..."
+                    oninput="handleCommentInput(this)"
+                ></textarea>
+                <div class="char-counter" id="charCounter">0/500</div>
+
+                <button
+                    id="submitReviewBtn"
+                    class="gradient-button w-full py-3 rounded-lg font-semibold text-white mt-4 flex items-center justify-center gap-2"
+                    onclick="submitReview()"
+                    disabled
+                >
+                    <span id="submitReviewBtnText">Yorumu Gönder</span>
+                </button>
+
+                <p class="expiry-note" id="expiryNote"></p>
+            </div>
+
+            <!-- QR doğrulaması yoksa bu kilitli banner gösterilir -->
+            <div class="locked-banner" id="lockedBanner">
+                <div class="text-3xl mb-2">🔒</div>
+                <p class="font-semibold text-slate-300 text-sm">Yorum yapmak için dükkandaki QR kodu okutman gerekiyor</p>
+                <p class="text-xs mt-1">Doğrulama sonrası 24 saat boyunca yorum yapabilirsin.</p>
+            </div>
+        </div>
+
+        <!-- ===== YORUM LİSTESİ ===== -->
+        <div>
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-bold text-slate-100">Yorumlar</h3>
+                <span class="text-xs text-slate-400" id="reviewsListCount"></span>
+            </div>
+
+            <div id="reviewsLoading" class="space-y-3">
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+            </div>
+
+            <div id="reviewsList" class="space-y-3 hidden"></div>
+
+            <div class="empty-state" id="reviewsEmptyState">
+                <div class="text-3xl mb-2">💬</div>
+                <p class="font-semibold text-slate-300 text-sm">Henüz yorum yapılmamış</p>
+                <p class="text-xs mt-1">Bu dükkana ilk yorumu sen yapabilirsin!</p>
+            </div>
+
+            <div class="error-state" id="reviewsErrorState">
+                <div class="text-3xl mb-2">⚠️</div>
+                <p class="font-semibold text-slate-300 text-sm">Yorumlar yüklenemedi</p>
+                <p class="text-xs mt-1" id="reviewsErrorDetail"></p>
+            </div>
+        </div>
+
+        <p class="text-center text-xs text-slate-500 mt-6">
+            © 2026 Highly - Her hakkı saklıdır.
+        </p>
+    </main>
+
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==========================================================
+        // CONFIGURATION
+        // ==========================================================
+        const SUPABASE_URL = 'https://ttuxfivcwdpyvhmybbna.supabase.co';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE'; // <-- Gerçek anon key ile değiştir
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // QR doğrulaması sonrası tanınan yorum yapma süresi (24 saat, ms cinsinden)
+        const VERIFICATION_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+        // ==========================================================
+        // STATE
+        // ==========================================================
+        let shopId = null;
+        let shopData = null;
+        let selectedRating = 0;
+        let isVerifiedForReview = false;
+
+        // ==========================================================
+        // URL'DEN SHOP ID OKUMA
+        // ==========================================================
+        function getShopIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        // ==========================================================
+        // QR DOĞRULAMA DURUMU: 24 saatlik pencere kontrolü
+        // ==========================================================
+        // qr-entry.html başarılı doğrulamadan sonra şu şekilde yönlendirmelidir:
+        // window.location.href = `/shop-detail.html?id=${shop_id}&verified=true`;
+        function checkVerificationStatus(id) {
+            const params = new URLSearchParams(window.location.search);
+            const storageKey = `boof_verified_shop_${id}`;
+
+            // URL'de "verified=true" varsa, doğrulama zamanını localStorage'a yaz
+            if (params.get('verified') === 'true') {
+                localStorage.setItem(storageKey, Date.now().toString());
+            }
+
+            // localStorage'daki doğrulama zamanını kontrol et (24 saat geçerli)
+            const storedTimestamp = localStorage.getItem(storageKey);
+            if (!storedTimestamp) return { verified: false, expiresAt: null };
+
+            const elapsed = Date.now() - parseInt(storedTimestamp, 10);
+            if (elapsed > VERIFICATION_WINDOW_MS) {
+                localStorage.removeItem(storageKey);
+                return { verified: false, expiresAt: null };
+            }
+
+            const expiresAt = parseInt(storedTimestamp, 10) + VERIFICATION_WINDOW_MS;
+            return { verified: true, expiresAt: expiresAt };
+        }
+
+        function renderReviewFormAccess(verificationStatus) {
+            const formCard = document.getElementById('reviewFormCard');
+            const lockedBanner = document.getElementById('lockedBanner');
+
+            isVerifiedForReview = verificationStatus.verified;
+
+            if (isVerifiedForReview) {
+                formCard.classList.remove('hidden');
+                lockedBanner.classList.add('hidden');
+
+                const hoursLeft = Math.max(
+                    0,
+                    Math.ceil((verificationStatus.expiresAt - Date.now()) / (60 * 60 * 1000))
+                );
+                document.getElementById('expiryNote').textContent =
+                    `Yorum yapma yetkin yaklaşık ${hoursLeft} saat daha geçerli.`;
+            } else {
+                formCard.classList.add('hidden');
+                lockedBanner.classList.remove('hidden');
+            }
+        }
+
+        // ==========================================================
+        // DÜKKAN BİLGİLERİNİ ÇEKME
+        // ==========================================================
+        async function fetchShopDetails(id) {
+            const { data, error } = await supabase
+                .from('shops')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error || !data) {
+                throw error || new Error('Dükkan bulunamadı.');
+            }
+
+            shopData = data;
+            return data;
+        }
+
+        function renderShopHero(shop, avgRating, reviewCount) {
+            document.getElementById('shopHeroSkeleton').classList.add('hidden');
+            document.getElementById('shopHeroContent').classList.remove('hidden');
+
+            document.getElementById('shopName').textContent = shop.shop_name;
+            document.getElementById('shopCategory').textContent = shop.category;
+
+            document.getElementById('bigRating').textContent = avgRating !== null ? avgRating.toFixed(1) : '—';
+            document.getElementById('ratingStarsDisplay').textContent = avgRating !== null
+                ? renderStarString(Math.round(avgRating))
+                : '';
+            document.getElementById('reviewCountText').textContent = reviewCount > 0
+                ? `${reviewCount} değerlendirme`
+                : 'Henüz değerlendirme yok';
+        }
+
+        function renderStarString(count) {
+            return '★'.repeat(count) + '☆'.repeat(5 - count);
+        }
+
+        // ==========================================================
+        // YORUMLARI ÇEKME (profiles JOIN ile kullanıcı adı)
+        // ==========================================================
+        async function fetchReviews(id) {
+            // reviews tablosu + ilişkili profiles.username join'i
+            const { data, error } = await supabase
+                .from('reviews')
+                .select('*, profiles(username)')
+                .eq('shop_id', id)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            return data || [];
+        }
+
+        function calculateAverageRating(reviews) {
+            if (!reviews.length) return null;
+            const total = reviews.reduce((sum, r) => sum + r.rating, 0);
+            return total / reviews.length;
+        }
+
+        function renderReviewsList(reviews) {
+            const listEl = document.getElementById('reviewsList');
+            const emptyEl = document.getElementById('reviewsEmptyState');
+            const countEl = document.getElementById('reviewsListCount');
+
+            document.getElementById('reviewsLoading').classList.add('hidden');
+
+            if (!reviews.length) {
+                listEl.classList.add('hidden');
+                emptyEl.classList.add('show');
+                countEl.textContent = '';
+                return;
+            }
+
+            emptyEl.classList.remove('show');
+            listEl.classList.remove('hidden');
+            countEl.textContent = `${reviews.length} yorum`;
+
+            listEl.innerHTML = reviews.map(buildReviewCard).join('');
+        }
+
+        function buildReviewCard(review) {
+            // profiles ilişkisi Supabase tarafından "profiles" objesi olarak gelir
+            const username = review.profiles?.username || 'Kullanıcı';
+            const initial = username.charAt(0).toUpperCase();
+            const dateText = formatDate(review.created_at);
+
+            return `
+                <div class="review-card">
+                    <div class="flex items-start gap-3">
+                        <div class="review-avatar">${escapeHtml(initial)}</div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-2 flex-wrap">
+                                <span class="font-semibold text-sm text-slate-100">${escapeHtml(username)}</span>
+                                ${review.is_verified ? '<span class="verified-badge">✓ Onaylı Müşteri</span>' : ''}
+                            </div>
+                            <div class="review-stars mt-0.5">${renderStarString(review.rating)}</div>
+                            <p class="text-sm text-slate-300 mt-2 break-words">${escapeHtml(review.comment || '')}</p>
+                            <p class="text-xs text-slate-500 mt-2">${dateText}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatDate(isoString) {
+            if (!isoString) return '';
+            const date = new Date(isoString);
+            return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        // ==========================================================
+        // YORUM YAPMA: YILDIZ SEÇİMİ
+        // ==========================================================
+        function setRating(value) {
+            selectedRating = value;
+            document.querySelectorAll('.star-btn').forEach(btn => {
+                const btnValue = parseInt(btn.dataset.value, 10);
+                btn.classList.toggle('active', btnValue <= value);
+            });
+            updateSubmitState();
+        }
+
+        // ==========================================================
+        // YORUM YAPMA: KARAKTER SAYACI
+        // ==========================================================
+        function handleCommentInput(textarea) {
+            const length = textarea.value.length;
+            const counter = document.getElementById('charCounter');
+            counter.textContent = `${length}/500`;
+
+            counter.classList.remove('warning', 'limit');
+            if (length >= 500) {
+                counter.classList.add('limit');
+            } else if (length >= 400) {
+                counter.classList.add('warning');
+            }
+
+            updateSubmitState();
+        }
+
+        function updateSubmitState() {
+            const comment = document.getElementById('commentInput').value.trim();
+            const btn = document.getElementById('submitReviewBtn');
+            btn.disabled = !(selectedRating > 0 && comment.length > 0);
+        }
+
+        // ==========================================================
+        // SUPABASE: YORUM GÖNDERME (INSERT)
+        // ==========================================================
+        async function submitReview() {
+            clearMessages();
+
+            const comment = document.getElementById('commentInput').value.trim();
+
+            if (selectedRating === 0 || !comment) {
+                showError('Lütfen puan verin ve yorumunuzu yazın.');
+                return;
+            }
+
+            setSubmitLoading(true);
+
+            try {
+                // Aktif kullanıcıyı al (reviews.user_id için)
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+                if (userError || !user) {
+                    showError('Yorum yapabilmek için giriş yapmalısınız.');
+                    setSubmitLoading(false);
+                    return;
+                }
+
+                // reviews tablosuna INSERT
+                // Şema: shop_id, user_id, rating, comment, is_verified
+                const { error: insertError } = await supabase
+                    .from('reviews')
+                    .insert([
+                        {
+                            shop_id: shopId,
+                            user_id: user.id,
+                            rating: selectedRating,
+                            comment: comment,
+                            is_verified: true // QR doğrulaması ile geldiği için onaylı yorum
+                        }
+                    ]);
+
+                if (insertError) throw insertError;
+
+                showSuccess('Yorumun başarıyla eklendi, teşekkürler!');
+
+                // Formu sıfırla
+                document.getElementById('commentInput').value = '';
+                document.getElementById('charCounter').textContent = '0/500';
+                setRating(0);
+
+                // Listeyi tazele
+                await loadReviews();
+
+            } catch (err) {
+                console.error('Yorum gönderme hatası:', err);
+                showError('Yorum gönderilirken bir sorun oluştu: ' + err.message);
+            } finally {
+                setSubmitLoading(false);
+            }
+        }
+
+        // ==========================================================
+        // VERİ YÜKLEME AKIŞI
+        // ==========================================================
+        async function loadShop() {
+            try {
+                const shop = await fetchShopDetails(shopId);
+                const reviews = await fetchReviews(shopId);
+                const avgRating = calculateAverageRating(reviews);
+
+                renderShopHero(shop, avgRating, reviews.length);
+                renderReviewsList(reviews);
+
+            } catch (err) {
+                console.error('Dükkan yüklenirken hata:', err);
+                document.getElementById('shopHeroSkeleton').classList.add('hidden');
+                document.getElementById('reviewsLoading').classList.add('hidden');
+                document.getElementById('reviewsErrorState').classList.add('show');
+                document.getElementById('reviewsErrorDetail').textContent = err.message || 'Bilinmeyen hata';
+            }
+        }
+
+        async function loadReviews() {
+            try {
+                const reviews = await fetchReviews(shopId);
+                const avgRating = calculateAverageRating(reviews);
+
+                if (shopData) {
+                    renderShopHero(shopData, avgRating, reviews.length);
+                }
+                renderReviewsList(reviews);
+            } catch (err) {
+                console.error('Yorumlar tazelenirken hata:', err);
+            }
+        }
+
+        // ==========================================================
+        // UI HELPERS
+        // ==========================================================
+        function setSubmitLoading(isLoading) {
+            const btn = document.getElementById('submitReviewBtn');
+            const btnText = document.getElementById('submitReviewBtnText');
+            btn.disabled = isLoading;
+            btnText.innerHTML = isLoading
+                ? '<span class="loading-spinner"></span>'
+                : 'Yorumu Gönder';
+        }
+
+        function showError(message) {
+            const el = document.getElementById('errorMessage');
+            document.getElementById('errorText').textContent = message;
+            el.classList.add('show');
+            document.getElementById('successMessage').classList.remove('show');
+        }
+
+        function showSuccess(message) {
+            const el = document.getElementById('successMessage');
+            document.getElementById('successText').textContent = message;
+            el.classList.add('show');
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        function clearMessages() {
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('successMessage').classList.remove('show');
+        }
+
+        // ==========================================================
+        // BAŞLANGIÇ
+        // ==========================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            shopId = getShopIdFromUrl();
+
+            if (!shopId) {
+                document.getElementById('shopHeroSkeleton').classList.add('hidden');
+                document.getElementById('reviewsLoading').classList.add('hidden');
+                document.getElementById('reviewsErrorState').classList.add('show');
+                document.getElementById('reviewsErrorDetail').textContent = 'Geçersiz dükkan bağlantısı (id parametresi eksik).';
+                return;
+            }
+
+            const verificationStatus = checkVerificationStatus(shopId);
+            renderReviewFormAccess(verificationStatus);
+
+            loadShop();
+        });
+    </script>
+</body>
+</html>
