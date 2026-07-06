@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boof - Kodu Doğrula</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Syne + DM Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1a0a3e 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .glass-effect {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        /* ===== Header ===== */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .back-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .back-btn:hover {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+
+        /* ===== Code Input Boxes ===== */
+        .code-input-group {
+            display: flex;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .code-box {
+            width: 3rem;
+            height: 3.5rem;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Syne', sans-serif;
+            background: rgba(30, 41, 59, 0.6);
+            border: 2px solid rgba(148, 163, 184, 0.25);
+            border-radius: 12px;
+            color: #e2e8f0;
+            transition: all 0.25s ease;
+            caret-color: #a78bfa;
+        }
+
+        .code-box:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: rgba(30, 41, 59, 0.9);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .code-box.filled {
+            border-color: rgba(167, 139, 250, 0.6);
+        }
+
+        .code-box.error {
+            border-color: #ef4444;
+            animation: shake 0.4s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        /* ===== Gradient Button ===== */
+        .gradient-button {
+            background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+            transition: all 0.3s ease;
+        }
+
+        .gradient-button:hover {
+            background: linear-gradient(135deg, #4f46e5 0%, #9370db 100%);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .gradient-button:active { transform: scale(0.98); }
+
+        .gradient-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* ===== Divider ===== */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(148, 163, 184, 0.2);
+        }
+
+        /* ===== Neon Scan Area ===== */
+        .scan-frame {
+            position: relative;
+            width: 100%;
+            max-width: 280px;
+            aspect-ratio: 1 / 1;
+            margin: 0 auto;
+            border-radius: 24px;
+            background: rgba(15, 23, 42, 0.6);
+            overflow: hidden;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        .scan-corner {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border-color: #a78bfa;
+            filter: drop-shadow(0 0 6px rgba(167, 139, 250, 0.8));
+        }
+
+        .scan-corner.tl { top: 12px; left: 12px; border-top: 4px solid; border-left: 4px solid; border-radius: 8px 0 0 0; }
+        .scan-corner.tr { top: 12px; right: 12px; border-top: 4px solid; border-right: 4px solid; border-radius: 0 8px 0 0; }
+        .scan-corner.bl { bottom: 12px; left: 12px; border-bottom: 4px solid; border-left: 4px solid; border-radius: 0 0 0 8px; }
+        .scan-corner.br { bottom: 12px; right: 12px; border-bottom: 4px solid; border-right: 4px solid; border-radius: 0 0 8px 0; }
+
+        .scan-line {
+            position: absolute;
+            left: 8%;
+            width: 84%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #a78bfa, transparent);
+            box-shadow: 0 0 12px 2px rgba(167, 139, 250, 0.8);
+            animation: scan-move 2.2s ease-in-out infinite;
+        }
+
+        @keyframes scan-move {
+            0% { top: 10%; }
+            50% { top: 88%; }
+            100% { top: 10%; }
+        }
+
+        .scan-video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .scan-placeholder-icon {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            opacity: 0.25;
+        }
+
+        .camera-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .camera-btn:hover {
+            box-shadow: 0 0 40px rgba(167, 139, 250, 0.7);
+            transform: scale(1.03);
+        }
+
+        /* ===== Messages ===== */
+        .status-message {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .status-message.show { display: flex; }
+
+        .status-message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fca5a5;
+        }
+
+        .status-message.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: #86efac;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- ===== TOP BAR ===== -->
+    <div class="top-bar">
+        <button class="back-btn" onclick="goBack()" aria-label="Geri dön">
+            <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </button>
+        <h1 class="text-lg font-bold text-slate-100">Kodu Doğrula</h1>
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="max-w-md mx-auto px-6 py-4">
+
+        <p class="text-center text-slate-400 text-sm mb-8">
+            Esnafın size gösterdiği <span class="text-indigo-300 font-semibold">6 haneli kodu</span> girin
+            ya da QR kodu okutun.
+        </p>
+
+        <!-- Status Messages -->
+        <div class="status-message error" id="errorMessage">
+            <span>⚠️</span><span id="errorText"></span>
+        </div>
+        <div class="status-message success" id="successMessage">
+            <span>✅</span><span id="successText"></span>
+        </div>
+
+        <!-- ===== MANUEL KOD GİRİŞİ ===== -->
+        <form id="codeForm" onsubmit="handleCodeSubmit(event)">
+            <div class="code-input-group mb-6">
+                <input type="text" inputmode="text" maxlength="1" class="code-box" data-index="0" oninput="handleDigitInput(this, 0)" onkeydown="handleKeyDown(event, 0)">
+                <input type="text" inputmode="text" maxlength="1" class="code-box" data-index="1" oninput="handleDigitInput(this, 1)" onkeydown="handleKeyDown(event, 1)">
+                <input type="text" inputmode="text" maxlength="1" class="code-box" data-index="2" oninput="handleDigitInput(this, 2)" onkeydown="handleKeyDown(event, 2)">
+                <input type="text" inputmode="text" maxlength="1" class="code-box" data-index="3" oninput="handleDigitInput(this, 3)" onkeydown="handleKeyDown(event, 3)">
+                <input type="text" inputmode="text" maxlength="1" class="code-box" data-index="4" oninput="handleDigitInput(this, 4)" onkeydown="handleKeyDown(event, 4)">
+                <input type="text" inputmode="text" maxlength="1" class="code-box" data-index="5" oninput="handleDigitInput(this, 5)" onkeydown="handleKeyDown(event, 5)">
+            </div>
+
+            <button type="submit" id="submitBtn" class="gradient-button w-full py-3 rounded-lg font-semibold text-white flex items-center justify-center gap-2" disabled>
+                <span id="submitBtnText">Kodu Onayla</span>
+            </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="divider">
+            <span class="text-xs text-slate-500 font-semibold">VEYA</span>
+        </div>
+
+        <!-- ===== QR TARAMA ALANI ===== -->
+        <div class="text-center">
+            <div class="scan-frame mb-5" id="scanFrame">
+                <video id="scanVideo" class="scan-video" autoplay playsinline muted></video>
+                <div class="scan-placeholder-icon" id="scanPlaceholder">📷</div>
+                <div class="scan-corner tl"></div>
+                <div class="scan-corner tr"></div>
+                <div class="scan-corner bl"></div>
+                <div class="scan-corner br"></div>
+                <div class="scan-line" id="scanLine" style="display:none;"></div>
+            </div>
+
+            <button class="camera-btn w-full max-w-xs py-3 rounded-lg font-semibold text-white" id="cameraBtn" onclick="toggleCamera()">
+                <span id="cameraBtnText">📸 Kamerayı Aç / QR Tara</span>
+            </button>
+            <p class="text-xs text-slate-500 mt-3">Kamera izni verildikten sonra QR kodu kare içine hizalayın.</p>
+        </div>
+
+        <p class="text-center text-xs text-slate-500 mt-10">
+            © 2026 Highly - Her hakkı saklıdır.
+        </p>
+    </main>
+
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- jsQR: Kameradan gelen kareleri çözümleyip QR verisini okur -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+    <script>
+        // ==========================================================
+        // CONFIGURATION
+        // ==========================================================
+        const SUPABASE_URL = 'https://ttuxfivcwdpyvhmybbna.supabase.co';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE'; // <-- Gerçek anon key ile değiştir
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ==========================================================
+        // STATE
+        // ==========================================================
+        let cameraStream = null;
+        let isCameraOpen = false;
+        let scanIntervalId = null;
+
+        // ==========================================================
+        // MANUEL KOD GİRİŞİ: 6 kutu arası otomatik geçiş
+        // ==========================================================
+        const codeBoxes = document.querySelectorAll('.code-box');
+
+        function handleDigitInput(inputEl, index) {
+            inputEl.value = inputEl.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            clearErrorState();
+
+            if (inputEl.value) {
+                inputEl.classList.add('filled');
+                // Sonraki kutuya geç
+                if (index < codeBoxes.length - 1) {
+                    codeBoxes[index + 1].focus();
+                }
+            } else {
+                inputEl.classList.remove('filled');
+            }
+
+            updateSubmitButtonState();
+        }
+
+        function handleKeyDown(event, index) {
+            // Backspace ile önceki kutuya dön
+            if (event.key === 'Backspace' && !codeBoxes[index].value && index > 0) {
+                codeBoxes[index - 1].focus();
+            }
+
+            // Yapıştırma desteği (6 haneli kodu tek seferde yapıştırma)
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('codeForm').requestSubmit();
+            }
+        }
+
+        // Panodan yapıştırma desteği
+        codeBoxes.forEach((box, idx) => {
+            box.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pasted = (e.clipboardData || window.clipboardData).getData('text').trim().toUpperCase();
+                const chars = pasted.replace(/[^A-Z0-9]/g, '').split('');
+
+                chars.forEach((char, i) => {
+                    if (codeBoxes[i]) {
+                        codeBoxes[i].value = char;
+                        codeBoxes[i].classList.add('filled');
+                    }
+                });
+
+                const nextEmptyIndex = Math.min(chars.length, codeBoxes.length - 1);
+                codeBoxes[nextEmptyIndex].focus();
+                updateSubmitButtonState();
+            });
+        });
+
+        function getEnteredCode() {
+            return Array.from(codeBoxes).map(box => box.value).join('');
+        }
+
+        function updateSubmitButtonState() {
+            const code = getEnteredCode();
+            document.getElementById('submitBtn').disabled = code.length !== 6;
+        }
+
+        function clearErrorState() {
+            codeBoxes.forEach(box => box.classList.remove('error'));
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        function markBoxesAsError() {
+            codeBoxes.forEach(box => box.classList.add('error'));
+            setTimeout(() => {
+                codeBoxes.forEach(box => box.classList.remove('error'));
+            }, 400);
+        }
+
+        // ==========================================================
+        // SUPABASE: KOD DOĞRULAMA
+        // ==========================================================
+        async function handleCodeSubmit(event) {
+            event.preventDefault();
+            const codeToken = getEnteredCode();
+
+            if (codeToken.length !== 6) return;
+
+            await verifyCode(codeToken);
+        }
+
+        async function verifyCode(codeToken) {
+            clearMessages();
+            setSubmitLoading(true);
+
+            try {
+                // qr_codes tablosunda: code_token eşleşen ve henüz kullanılmamış (is_used = false) kaydı ara
+                const { data, error } = await supabase
+                    .from('qr_codes')
+                    .select('*')
+                    .eq('code_token', codeToken)
+                    .eq('is_used', false)
+                    .single();
+
+                if (error || !data) {
+                    showError('Kod geçersiz veya zaten kullanılmış.');
+                    markBoxesAsError();
+                    setSubmitLoading(false);
+                    return;
+                }
+
+                // ---- Kod geçerli ----
+                showSuccess('Başarılı! Yorum sayfasına yönlendiriliyorsunuz...');
+
+                // TODO (ileride aktif edilecek):
+                // Kod kullanıldıktan sonra tekrar kullanılmasını engellemek için
+                // is_used alanını true yapmak gerekir:
+                //
+                // await supabase
+                //     .from('qr_codes')
+                //     .update({ is_used: true })
+                //     .eq('id', data.id);
+
+                setTimeout(() => {
+                    window.location.href = `/shop-detail.html?id=${data.shop_id}&verified=true`;
+                }, 1500);
+
+            } catch (err) {
+                console.error('Kod doğrulama hatası:', err);
+                showError('Bir şeyler ters gitti, lütfen tekrar deneyin.');
+                setSubmitLoading(false);
+            }
+        }
+
+        // ==========================================================
+        // KAMERA / QR TARAMA (İskelet)
+        // ==========================================================
+        async function toggleCamera() {
+            if (isCameraOpen) {
+                stopCamera();
+            } else {
+                await startCamera();
+            }
+        }
+
+        async function startCamera() {
+            const video = document.getElementById('scanVideo');
+            const placeholder = document.getElementById('scanPlaceholder');
+            const scanLine = document.getElementById('scanLine');
+            const cameraBtnText = document.getElementById('cameraBtnText');
+
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }
+                });
+
+                video.srcObject = cameraStream;
+                video.style.display = 'block';
+                placeholder.style.display = 'none';
+                scanLine.style.display = 'block';
+                cameraBtnText.textContent = '✖️ Taramayı Durdur';
+                isCameraOpen = true;
+
+                // QR kod çözümleme döngüsü (jsQR kütüphanesi eklendiğinde aktif edilecek)
+                startScanLoop(video);
+
+            } catch (err) {
+                console.error('Kamera açılamadı:', err);
+                showError('Kameraya erişilemedi. Lütfen kamera izinlerini kontrol edin.');
+            }
+        }
+
+        function stopCamera() {
+            const video = document.getElementById('scanVideo');
+            const placeholder = document.getElementById('scanPlaceholder');
+            const scanLine = document.getElementById('scanLine');
+            const cameraBtnText = document.getElementById('cameraBtnText');
+
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+
+            if (scanIntervalId) {
+                clearInterval(scanIntervalId);
+                scanIntervalId = null;
+            }
+
+            video.style.display = 'none';
+            placeholder.style.display = 'flex';
+            scanLine.style.display = 'none';
+            cameraBtnText.textContent = '📸 Kamerayı Aç / QR Tara';
+            isCameraOpen = false;
+        }
+
+        function startScanLoop(video) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+            scanIntervalId = setInterval(() => {
+                // Video henüz kare üretecek kadar hazır değilse bekle
+                if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const qrResult = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: 'dontInvert'
+                });
+
+                if (qrResult && qrResult.data) {
+                    handleQRDetected(qrResult.data.trim());
+                }
+            }, 300);
+        }
+
+        function handleQRDetected(codeToken) {
+            // 1) Taramayı ve kamerayı durdur
+            stopCamera();
+
+            // 2) Okunan kodu 6 kutuya harf harf doldur
+            fillCodeBoxesFromScan(codeToken);
+
+            // 3) Submit butonunun durumunu güncelle
+            updateSubmitButtonState();
+
+            // 4) Supabase doğrulamasını otomatik başlat
+            verifyCode(codeToken);
+        }
+
+        function fillCodeBoxesFromScan(codeToken) {
+            const chars = codeToken.toUpperCase().replace(/[^A-Z0-9]/g, '').split('');
+
+            codeBoxes.forEach((box, i) => {
+                box.value = chars[i] || '';
+                box.classList.toggle('filled', Boolean(chars[i]));
+            });
+        }
+
+        // ==========================================================
+        // UI HELPERS
+        // ==========================================================
+        function setSubmitLoading(isLoading) {
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('submitBtnText');
+            btn.disabled = isLoading;
+            btnText.innerHTML = isLoading
+                ? '<span class="loading-spinner"></span>'
+                : 'Kodu Onayla';
+        }
+
+        function showError(message) {
+            const el = document.getElementById('errorMessage');
+            document.getElementById('errorText').textContent = message;
+            el.classList.add('show');
+            document.getElementById('successMessage').classList.remove('show');
+        }
+
+        function showSuccess(message) {
+            const el = document.getElementById('successMessage');
+            document.getElementById('successText').textContent = message;
+            el.classList.add('show');
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        function clearMessages() {
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('successMessage').classList.remove('show');
+        }
+
+        function goBack() {
+            stopCamera();
+            window.history.back();
+        }
+
+        // Sayfa kapanırken kamerayı kapat
+        window.addEventListener('beforeunload', stopCamera);
+
+        // Sayfa açılışında ilk kutuya odaklan
+        document.addEventListener('DOMContentLoaded', () => {
+            codeBoxes[0].focus();
+        });
+    </script>
+</body>
+</html>
