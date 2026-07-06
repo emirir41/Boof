@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boof - Dükkanları Keşfet</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Syne + DM Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1a0a3e 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .glass-effect {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        /* ===== Header ===== */
+        .app-header {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+
+        .search-input {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #6366f1;
+            background: rgba(30, 41, 59, 0.9);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+        }
+
+        .search-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .profile-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+            transition: all 0.3s ease;
+        }
+
+        .profile-btn:hover {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+            transform: scale(1.05);
+        }
+
+        /* ===== Category Pills ===== */
+        .category-scroll {
+            display: flex;
+            gap: 0.6rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 0.25rem;
+        }
+
+        .category-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-pill {
+            flex-shrink: 0;
+            padding: 0.6rem 1.2rem;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            background: rgba(30, 41, 59, 0.5);
+            color: #cbd5e1;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .category-pill:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .category-pill.active {
+            background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+            border-color: #6366f1;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.35);
+        }
+
+        /* ===== Shop Cards ===== */
+        .shop-card {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .shop-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(99, 102, 241, 0.4);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.15);
+        }
+
+        .shop-card-media {
+            height: 120px;
+            background: linear-gradient(135deg, #312e81 0%, #4c1d95 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            position: relative;
+        }
+
+        .verified-badge {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.5);
+            color: #86efac;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            backdrop-filter: blur(4px);
+        }
+
+        .category-tag {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+        }
+
+        .rating-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-weight: 700;
+            font-size: 0.875rem;
+            color: #fbbf24;
+        }
+
+        /* ===== Loading Skeleton ===== */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(51,65,85,0.4) 25%, rgba(71,85,105,0.5) 37%, rgba(51,65,85,0.4) 63%);
+            background-size: 400% 100%;
+            animation: skeleton-loading 1.4s ease infinite;
+            border-radius: 16px;
+            height: 220px;
+        }
+
+        @keyframes skeleton-loading {
+            0% { background-position: 100% 50%; }
+            100% { background-position: 0 50%; }
+        }
+
+        .empty-state {
+            display: none;
+            text-align: center;
+            padding: 4rem 1rem;
+            color: #94a3b8;
+        }
+
+        .empty-state.show {
+            display: block;
+        }
+
+        ::-webkit-scrollbar { height: 6px; }
+        ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.4); border-radius: 999px; }
+    </style>
+</head>
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <header class="app-header px-4 py-3">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center justify-between gap-3 mb-3">
+                <!-- Logo -->
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <span class="text-indigo-400 text-lg">✦</span>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                        Boof
+                    </h1>
+                </div>
+
+                <!-- Search -->
+                <div class="flex-1 max-w-md">
+                    <div class="relative">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        <input
+                            type="text"
+                            id="searchInput"
+                            class="search-input w-full pl-9 pr-4 py-2 rounded-lg text-sm"
+                            placeholder="Dükkan ara..."
+                            oninput="handleSearch(this.value)"
+                        >
+                    </div>
+                </div>
+
+                <!-- Profile Button -->
+                <a href="/profile.html" class="profile-btn w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" aria-label="Profilim">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="category-scroll" id="categoryScroll">
+                <button class="category-pill active" data-category="all" onclick="handleCategoryClick('all', this)">Tümü</button>
+                <button class="category-pill" data-category="Berber" onclick="handleCategoryClick('Berber', this)">💈 Berber</button>
+                <button class="category-pill" data-category="Kafe" onclick="handleCategoryClick('Kafe', this)">☕ Kafe</button>
+                <button class="category-pill" data-category="Restoran" onclick="handleCategoryClick('Restoran', this)">🍽️ Restoran</button>
+                <button class="category-pill" data-category="Tamirci" onclick="handleCategoryClick('Tamirci', this)">🔧 Tamirci</button>
+                <button class="category-pill" data-category="Kuru Temizleme" onclick="handleCategoryClick('Kuru Temizleme', this)">🧺 Kuru Temizleme</button>
+                <button class="category-pill" data-category="Güzellik Salonu" onclick="handleCategoryClick('Güzellik Salonu', this)">💅 Güzellik Salonu</button>
+                <button class="category-pill" data-category="Market" onclick="handleCategoryClick('Market', this)">🛒 Market</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="max-w-6xl mx-auto px-4 py-6">
+
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-slate-200" id="resultsTitle">Tüm Dükkanlar</h2>
+            <span class="text-sm text-slate-400" id="resultsCount"></span>
+        </div>
+
+        <!-- Loading Skeletons -->
+        <div id="loadingGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+        </div>
+
+        <!-- Shop Grid -->
+        <div id="shopGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 hidden"></div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+            <div class="text-4xl mb-3">🔍</div>
+            <p class="font-semibold text-slate-300">Sonuç bulunamadı</p>
+            <p class="text-sm mt-1">Farklı bir arama veya kategori deneyin.</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="empty-state" id="errorState">
+            <div class="text-4xl mb-3">⚠️</div>
+            <p class="font-semibold text-slate-300">Dükkanlar yüklenirken bir sorun oluştu</p>
+            <p class="text-sm mt-1" id="errorDetail"></p>
+        </div>
+
+        <p class="text-center text-xs text-slate-500 mt-10">
+            © 2026 Highly - Her hakkı saklıdır.
+        </p>
+    </main>
+
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==========================================================
+        // CONFIGURATION
+        // ==========================================================
+        const SUPABASE_URL = 'https://ttuxfivcwdpyvhmybbna.supabase.co';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE'; // <-- Gerçek anon key ile değiştir
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // ==========================================================
+        // STATE
+        // ==========================================================
+        let allShops = [];        // shops tablosundan çekilen ham veri + hesaplanmış rating
+        let currentCategory = 'all';
+        let currentSearchTerm = '';
+
+        // Kategori emoji eşleşmesi (kart üstündeki görsel alan için)
+        const CATEGORY_ICONS = {
+            'Berber': '💈',
+            'Kafe': '☕',
+            'Restoran': '🍽️',
+            'Tamirci': '🔧',
+            'Kuru Temizleme': '🧺',
+            'Güzellik Salonu': '💅',
+            'Market': '🛒'
+        };
+
+        // ==========================================================
+        // VERİ ÇEKME: shops + reviews (ortalama puan hesaplama)
+        // ==========================================================
+        async function fetchShops() {
+            showLoading(true);
+
+            try {
+                // 1) Tüm dükkanları çek
+                const { data: shops, error: shopsError } = await supabase
+                    .from('shops')
+                    .select('*');
+
+                if (shopsError) throw shopsError;
+
+                // 2) Tüm yorumları çek (rating + shop_id + is_verified)
+                const { data: reviews, error: reviewsError } = await supabase
+                    .from('reviews')
+                    .select('shop_id, rating, is_verified');
+
+                if (reviewsError) throw reviewsError;
+
+                // 3) shop_id bazında ortalama puan ve yorum sayısını hesapla
+                const ratingMap = {}; // { shop_id: { total, count, verifiedCount } }
+
+                (reviews || []).forEach(review => {
+                    if (!ratingMap[review.shop_id]) {
+                        ratingMap[review.shop_id] = { total: 0, count: 0, verifiedCount: 0 };
+                    }
+                    ratingMap[review.shop_id].total += review.rating;
+                    ratingMap[review.shop_id].count += 1;
+                    if (review.is_verified) {
+                        ratingMap[review.shop_id].verifiedCount += 1;
+                    }
+                });
+
+                // 4) shops verisine hesaplanan rating bilgisini ekle
+                allShops = (shops || []).map(shop => {
+                    const stats = ratingMap[shop.id];
+                    const avgRating = stats ? (stats.total / stats.count) : null;
+                    return {
+                        ...shop,
+                        avgRating: avgRating,
+                        reviewCount: stats ? stats.count : 0,
+                        hasVerifiedReviews: stats ? stats.verifiedCount > 0 : false
+                    };
+                });
+
+                renderShops();
+
+            } catch (err) {
+                console.error('Dükkanlar yüklenirken hata:', err);
+                showError(err.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ==========================================================
+        // FİLTRELEME MANTIĞI (kategori + arama)
+        // ==========================================================
+        function getFilteredShops() {
+            return allShops.filter(shop => {
+                const matchesCategory = currentCategory === 'all' || shop.category === currentCategory;
+                const matchesSearch = shop.shop_name
+                    .toLowerCase()
+                    .includes(currentSearchTerm.toLowerCase());
+                return matchesCategory && matchesSearch;
+            });
+        }
+
+        function handleSearch(value) {
+            currentSearchTerm = value.trim();
+            renderShops();
+        }
+
+        function handleCategoryClick(category, buttonEl) {
+            currentCategory = category;
+
+            // Aktif pill stilini güncelle
+            document.querySelectorAll('.category-pill').forEach(pill => {
+                pill.classList.remove('active');
+            });
+            buttonEl.classList.add('active');
+
+            // Başlığı güncelle
+            const titleEl = document.getElementById('resultsTitle');
+            titleEl.textContent = category === 'all' ? 'Tüm Dükkanlar' : category;
+
+            renderShops();
+        }
+
+        // ==========================================================
+        // RENDER: Dükkan kartlarını ekrana bas
+        // ==========================================================
+        function renderShops() {
+            const grid = document.getElementById('shopGrid');
+            const emptyState = document.getElementById('emptyState');
+            const resultsCount = document.getElementById('resultsCount');
+
+            const filtered = getFilteredShops();
+            resultsCount.textContent = filtered.length > 0 ? `${filtered.length} dükkan` : '';
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                grid.classList.add('hidden');
+                emptyState.classList.add('show');
+                return;
+            }
+
+            emptyState.classList.remove('show');
+            grid.classList.remove('hidden');
+
+            grid.innerHTML = filtered.map(shop => buildShopCard(shop)).join('');
+        }
+
+        function buildShopCard(shop) {
+            const icon = CATEGORY_ICONS[shop.category] || '🏪';
+            const ratingDisplay = shop.avgRating !== null
+                ? shop.avgRating.toFixed(1)
+                : '—';
+            const reviewCountText = shop.reviewCount > 0
+                ? `(${shop.reviewCount})`
+                : 'Henüz yorum yok';
+
+            return `
+                <div class="shop-card" onclick="goToShopDetail(${shop.id})">
+                    <div class="shop-card-media">
+                        ${icon}
+                        ${shop.hasVerifiedReviews ? '<span class="verified-badge">✓ Onaylı</span>' : ''}
+                    </div>
+                    <div class="p-3">
+                        <h3 class="font-bold text-sm text-slate-100 truncate mb-1">${escapeHtml(shop.shop_name)}</h3>
+                        <span class="category-tag">${escapeHtml(shop.category)}</span>
+                        <div class="flex items-center justify-between mt-2">
+                            <div class="rating-badge">
+                                ⭐ ${ratingDisplay}
+                            </div>
+                            <span class="text-xs text-slate-500">${reviewCountText}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Basit XSS koruması (dükkan adı gibi kullanıcı verisi için)
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        // ==========================================================
+        // NAVİGASYON
+        // ==========================================================
+        function goToShopDetail(shopId) {
+            // TODO: Dükkan detay sayfasına yönlendir
+            window.location.href = `/shop-detail.html?id=${shopId}`;
+        }
+
+        // ==========================================================
+        // UI STATE HELPERS
+        // ==========================================================
+        function showLoading(isLoading) {
+            document.getElementById('loadingGrid').classList.toggle('hidden', !isLoading);
+            document.getElementById('shopGrid').classList.toggle('hidden', isLoading);
+            if (isLoading) {
+                document.getElementById('emptyState').classList.remove('show');
+                document.getElementById('errorState').classList.remove('show');
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('errorState').classList.add('show');
+            document.getElementById('errorDetail').textContent = message;
+        }
+
+        // ==========================================================
+        // BAŞLANGIÇ
+        // ==========================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchShops();
+        });
+    </script>
+</body>
+</html>
