@@ -30,7 +30,6 @@
             box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
             transform: translateY(-1px);
         }
-        /* QR kod kutusunun tasarımı */
         #qrcode img {
             margin: 0 auto;
             border-radius: 12px;
@@ -47,27 +46,23 @@
             <p class="text-xs text-slate-400 mt-1">Müşterilerinize göstermek için anlık kod üretin.</p>
         </div>
 
-        <!-- QR ve Kod Gösterim Alanı (Başta Gizli, Kod Üretilince Açılır) -->
+        <!-- QR ve Kod Gösterim Alanı -->
         <div id="codeDisplayArea" class="hidden space-y-6 my-6 p-4 bg-slate-900/50 rounded-xl border border-slate-800">
-            
-            <!-- 6 Haneli Büyük Kod -->
             <div>
                 <span class="text-xs text-slate-400 block mb-1">6 Haneli Giriş Kodu</span>
                 <div id="tokenText" class="text-4xl font-black tracking-widest text-indigo-300 font-mono select-all">------</div>
             </div>
 
-            <!-- QR Kodun Basılacağı Yer -->
             <div class="flex justify-center py-2">
                 <div id="qrcode"></div>
             </div>
 
-            <!-- Sayaç / Kalan Süre -->
             <div class="text-xs text-slate-400">
                 Kodun geçerlilik süresi: <span id="countdown" class="text-amber-400 font-bold">05:00</span>
             </div>
         </div>
 
-        <!-- Placeholder (Kod yokken gösterilecek alan) -->
+        <!-- Placeholder -->
         <div id="placeholderArea" class="py-12 border-2 border-dashed border-slate-700 rounded-xl my-6 flex flex-col items-center justify-center text-slate-500 text-sm">
             <span>📷</span>
             <span class="mt-2">Henüz aktif bir kod üretilmedi.</span>
@@ -82,7 +77,7 @@
 
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- QRCode.js (QR kod üretmek için hafif kütüphane) -->
+    <!-- QRCode.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
@@ -91,14 +86,11 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaGV2eWpjYnpvcW1ucW1pdXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1MDYzODMsImV4cCI6MjA5ODA4MjM4M30.Q0BhfWbyOKOCC9rDxzTjDPS0h0jJtUGZfL71Jj9bR90';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Şimdilik test için statik bir SHOP_ID veriyoruz. 
-        // İleride esnaf giriş yapınca dükkan ID'sini buraya dinamik çakarız.
         const CURRENT_SHOP_ID = 1; 
 
         let timerInterval = null;
         let qrGenerator = null;
 
-        // 1) Rastgele 6 Haneli Alfanümerik Kod Üretme Fonksiyonu
         function generateRandomToken() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             let result = '';
@@ -108,22 +100,28 @@
             return result;
         }
 
-        // 2) Yeni Kod Üretip Supabase'e Basan Fonksiyon
         async function generateNewCode() {
             const btn = document.getElementById('generateBtn');
             btn.disabled = true;
             btn.textContent = 'Üretiliyor...';
 
-            // Temizlikle başla
             clearInterval(timerInterval);
             document.getElementById('qrcode').innerHTML = '';
 
-            const token = generateRandomToken();
-            const now = new Date();
-            const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 Dakika Sonrası
-
             try {
-                // Supabase qr_codes tablosuna insert atıyoruz
+                // VERİTABANI TEMİZLİĞİ: Süresi dolmuş (expires_at < şu an) olan tüm eski kodları uçuruyoruz
+                const nowIso = new Date().toISOString();
+                await supabaseClient
+                    .from('qr_codes')
+                    .delete()
+                    .lt('expires_at', nowIso);
+
+                // Yeni Değerleri Hazırla
+                const token = generateRandomToken();
+                const now = new Date();
+                const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 Dakika Sonrası
+
+                // Yeni kodu ekle
                 const { error } = await supabaseClient
                     .from('qr_codes')
                     .insert([
@@ -142,11 +140,9 @@
                 document.getElementById('codeDisplayArea').classList.remove('hidden');
                 document.getElementById('tokenText').textContent = token;
 
-                // Müşterinin tarayacağı url yapısı: qr-entry sayfasına token parametresiyle uçuracak
-                // Eğer canlıya aldıysan buradaki localhost linkini kendi domaininle değiştirirsin (örn: highly.com/qr-entry.html)
+                // QR Kod Link Yapısı (qr-entry dosyasına otomatik parametre fırlatacak)
                 const targetUrl = `${window.location.origin}/qr-entry.html?code=${token}`;
 
-                // QR Kodu Ekrana Bas
                 qrGenerator = new QRCode(document.getElementById('qrcode'), {
                     text: targetUrl,
                     width: 180,
@@ -156,7 +152,6 @@
                     correctLevel : QRCode.CorrectLevel.H
                 });
 
-                // Geri Sayımı Başlat
                 startCountdown(5 * 60);
 
             } catch (err) {
@@ -168,7 +163,6 @@
             }
         }
 
-        // 3) Ekrandaki Geri Sayım Sayacı
         function startCountdown(durationInSeconds) {
             let timer = durationInSeconds;
             const display = document.getElementById('countdown');
@@ -186,7 +180,6 @@
                     clearInterval(timerInterval);
                     display.textContent = "SÜRESİ DOLDU";
                     display.className = "text-red-500 font-bold";
-                    // Süresi dolunca QR ve kodu eskit/kapat
                     document.getElementById('tokenText').classList.add('line-through', 'text-slate-600');
                     document.getElementById('qrcode').style.opacity = '0.3';
                 } else {
