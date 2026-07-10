@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boof - Esnaf Paneli</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Syne + DM Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * { font-family: 'DM Sans', sans-serif; }
+        h1, h2, h3 { font-family: 'Syne', sans-serif; }
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #0f0a2a 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+        .gradient-btn {
+            background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+            transition: all 0.3s ease;
+        }
+        .gradient-btn:hover {
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
+            transform: translateY(-1px);
+        }
+        /* QR kod kutusunun tasarımı */
+        #qrcode img {
+            margin: 0 auto;
+            border-radius: 12px;
+            border: 4px solid white;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4">
+
+    <main class="w-full max-w-md glass-card rounded-2xl p-6 text-center shadow-2xl">
+        <div class="mb-6">
+            <span class="text-xs font-bold tracking-widest text-indigo-400 uppercase">Boof Business</span>
+            <h1 class="text-2xl font-extrabold text-white mt-1">Dinamik QR Oluşturucu</h1>
+            <p class="text-xs text-slate-400 mt-1">Müşterilerinize göstermek için anlık kod üretin.</p>
+        </div>
+
+        <!-- QR ve Kod Gösterim Alanı (Başta Gizli, Kod Üretilince Açılır) -->
+        <div id="codeDisplayArea" class="hidden space-y-6 my-6 p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+            
+            <!-- 6 Haneli Büyük Kod -->
+            <div>
+                <span class="text-xs text-slate-400 block mb-1">6 Haneli Giriş Kodu</span>
+                <div id="tokenText" class="text-4xl font-black tracking-widest text-indigo-300 font-mono select-all">------</div>
+            </div>
+
+            <!-- QR Kodun Basılacağı Yer -->
+            <div class="flex justify-center py-2">
+                <div id="qrcode"></div>
+            </div>
+
+            <!-- Sayaç / Kalan Süre -->
+            <div class="text-xs text-slate-400">
+                Kodun geçerlilik süresi: <span id="countdown" class="text-amber-400 font-bold">05:00</span>
+            </div>
+        </div>
+
+        <!-- Placeholder (Kod yokken gösterilecek alan) -->
+        <div id="placeholderArea" class="py-12 border-2 border-dashed border-slate-700 rounded-xl my-6 flex flex-col items-center justify-center text-slate-500 text-sm">
+            <span>📷</span>
+            <span class="mt-2">Henüz aktif bir kod üretilmedi.</span>
+        </div>
+
+        <!-- Kod Üretme Butonu -->
+        <button id="generateBtn" onclick="generateNewCode()" class="gradient-btn w-full py-3.5 rounded-xl font-bold text-white shadow-lg">
+            ⚡ Yeni Kod & QR Üret
+        </button>
+
+    </main>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- QRCode.js (QR kod üretmek için hafif kütüphane) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <script>
+        // CONFIGURATION
+        const SUPABASE_URL = 'https://nrhevyjcbzoqmnqmiuvt.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaGV2eWpjYnpvcW1ucW1pdXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1MDYzODMsImV4cCI6MjA5ODA4MjM4M30.Q0BhfWbyOKOCC9rDxzTjDPS0h0jJtUGZfL71Jj9bR90';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Şimdilik test için statik bir SHOP_ID veriyoruz. 
+        // İleride esnaf giriş yapınca dükkan ID'sini buraya dinamik çakarız.
+        const CURRENT_SHOP_ID = 1; 
+
+        let timerInterval = null;
+        let qrGenerator = null;
+
+        // 1) Rastgele 6 Haneli Alfanümerik Kod Üretme Fonksiyonu
+        function generateRandomToken() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // 2) Yeni Kod Üretip Supabase'e Basan Fonksiyon
+        async function generateNewCode() {
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            btn.textContent = 'Üretiliyor...';
+
+            // Temizlikle başla
+            clearInterval(timerInterval);
+            document.getElementById('qrcode').innerHTML = '';
+
+            const token = generateRandomToken();
+            const now = new Date();
+            const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 Dakika Sonrası
+
+            try {
+                // Supabase qr_codes tablosuna insert atıyoruz
+                const { error } = await supabaseClient
+                    .from('qr_codes')
+                    .insert([
+                        {
+                            shop_id: CURRENT_SHOP_ID,
+                            code_token: token,
+                            is_used: false,
+                            expires_at: expiresAt.toISOString()
+                        }
+                    ]);
+
+                if (error) throw error;
+
+                // UI Güncelleme
+                document.getElementById('placeholderArea').classList.add('hidden');
+                document.getElementById('codeDisplayArea').classList.remove('hidden');
+                document.getElementById('tokenText').textContent = token;
+
+                // Müşterinin tarayacağı url yapısı: qr-entry sayfasına token parametresiyle uçuracak
+                // Eğer canlıya aldıysan buradaki localhost linkini kendi domaininle değiştirirsin (örn: highly.com/qr-entry.html)
+                const targetUrl = `${window.location.origin}/qr-entry.html?code=${token}`;
+
+                // QR Kodu Ekrana Bas
+                qrGenerator = new QRCode(document.getElementById('qrcode'), {
+                    text: targetUrl,
+                    width: 180,
+                    height: 180,
+                    colorDark : "#0f172a",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+
+                // Geri Sayımı Başlat
+                startCountdown(5 * 60);
+
+            } catch (err) {
+                console.error('Kod üretim hatası:', err);
+                alert('Kod üretilirken bir hata oluştu.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '⚡ Yeni Kod & QR Üret';
+            }
+        }
+
+        // 3) Ekrandaki Geri Sayım Sayacı
+        function startCountdown(durationInSeconds) {
+            let timer = durationInSeconds;
+            const display = document.getElementById('countdown');
+
+            timerInterval = setInterval(() => {
+                let minutes = parseInt(timer / 60, 10);
+                let seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                display.textContent = minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    clearInterval(timerInterval);
+                    display.textContent = "SÜRESİ DOLDU";
+                    display.className = "text-red-500 font-bold";
+                    // Süresi dolunca QR ve kodu eskit/kapat
+                    document.getElementById('tokenText').classList.add('line-through', 'text-slate-600');
+                    document.getElementById('qrcode').style.opacity = '0.3';
+                } else {
+                    display.className = "text-amber-400 font-bold";
+                    document.getElementById('tokenText').classList.remove('line-through', 'text-slate-600');
+                    document.getElementById('qrcode').style.opacity = '1';
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
