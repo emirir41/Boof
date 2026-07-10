@@ -303,7 +303,7 @@
         <div class="error-state" id="errorState">
             <div class="text-4xl mb-3">⚠️</div>
             <p class="font-semibold text-slate-300">Dükkanlar yüklenirken bir sorun oluştu</p>
-            <p class="text-sm mt-1" id="errorDetail"></p>
+            <p class="text-sm mt-1 pb-1 px-4 text-rose-400 font-mono text-xs overflow-auto max-w-full" id="errorDetail"></p>
         </div>
 
         <p class="text-center text-xs text-slate-500 mt-10">
@@ -318,19 +318,19 @@
         // ==========================================================
         // CONFIGURATION
         // ==========================================================
+        // DÜZELTİLDİ: URL artık doğrudan "nrhevyjcbzoqmnqmiuvt" projesine bakıyor!
         const SUPABASE_URL = 'https://nrhevyjcbzoqmnqmiuvt.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaGV2eWpjYnpvcW1ucW1pdXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1MDYzODMsImV4cCI6MjA5ODA4MjM4M30.Q0BhfWbyOKOCC9rDxzTjDPS0h0jJtUGZfL71Jj9bR90'; // <-- Gerçek anon key ile değiştir
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaGV2eWpjYnpvcW1ucW1pdXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1MDYzODMsImV4cCI6MjA5ODA4MjM4M30.Q0BhfWbyOKOCC9rDxzTjDPS0h0jJtUGZfL71Jj9bR90'; 
 
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // ==========================================================
         // STATE
         // ==========================================================
-        let allShops = [];        // shops tablosu + hesaplanmış rating/yorum sayısı
+        let allShops = [];        
         let currentCategory = 'all';
         let currentSearchTerm = '';
 
-        // Kategori emoji eşleşmesi (kart üstündeki görsel alan için)
         const CATEGORY_ICONS = {
             'Kafe': '☕',
             'Restoran': '🍽️',
@@ -348,14 +348,14 @@
             showLoading(true);
 
             try {
-                // 1) Tüm dükkanları çek (Burası ana kemik, hata almamalıyız)
+                // 1) Tüm dükkanları çek (Burası ana kemik)
                 const { data: shops, error: shopsError } = await supabase
                     .from('shops')
                     .select('*');
 
                 if (shopsError) throw shopsError;
 
-                // 2) Yorumları çekmeyi dene (Hata alsa veya boş olsa dahi dükkanları engellemeyecek şekilde korumaya alıyoruz)
+                // 2) Yorumları çekmeyi dene
                 let reviews = [];
                 try {
                     const { data: fetchedReviews, error: reviewsError } = await supabase
@@ -369,8 +369,7 @@
                     console.warn("Yorumlar alınamadı veya tablo boş, dükkanlar listelenmeye devam ediyor:", reviewEx);
                 }
 
-                // 3) shop_id bazında ortalama puan ve yorum sayısını hesapla
-                const ratingMap = {}; // { shop_id: { total, count, verifiedCount } }
+                const ratingMap = {}; 
 
                 reviews.forEach(review => {
                     if (!ratingMap[review.shop_id]) {
@@ -383,7 +382,6 @@
                     }
                 });
 
-                // 4) shops verisine hesaplanan rating + yorum sayısını ekle
                 allShops = (shops || []).map(shop => {
                     const stats = ratingMap[shop.id];
                     const avgRating = stats ? (stats.total / stats.count) : null;
@@ -399,15 +397,12 @@
 
             } catch (err) {
                 console.error('Dükkanlar yüklenirken hata:', err);
-                showErrorState(err.message);
+                showErrorState(err.message || 'Supabase projesine bağlanılamadı.');
             } finally {
                 showLoading(false);
             }
         }
 
-        // ==========================================================
-        // FİLTRELEME MANTIĞI (kategori + arama)
-        // ==========================================================
         function getFilteredShops() {
             return allShops.filter(shop => {
                 const matchesCategory = currentCategory === 'all' || shop.category === currentCategory;
@@ -437,9 +432,6 @@
             renderShops();
         }
 
-        // ==========================================================
-        // RENDER: Dükkan kartlarını ekrana bas
-        // ==========================================================
         function renderShops() {
             const grid = document.getElementById('shopGrid');
             const emptyState = document.getElementById('emptyState');
@@ -490,23 +482,16 @@
             `;
         }
 
-        // Basit XSS koruması (dükkan adı gibi kullanıcı verisi için)
         function escapeHtml(str) {
             const div = document.createElement('div');
             div.textContent = str || '';
             return div.innerHTML;
         }
 
-        // ==========================================================
-        // NAVİGASYON
-        // ==========================================================
         function goToShopDetail(shopId) {
             window.location.href = `/shop-detail.html?id=${shopId}`;
         }
 
-        // ==========================================================
-        // UI STATE HELPERS
-        // ==========================================================
         function showLoading(isLoading) {
             document.getElementById('loadingGrid').classList.toggle('hidden', !isLoading);
             document.getElementById('shopGrid').classList.toggle('hidden', isLoading);
@@ -521,9 +506,6 @@
             document.getElementById('errorDetail').textContent = message;
         }
 
-        // ==========================================================
-        // BAŞLANGIÇ
-        // ==========================================================
         document.addEventListener('DOMContentLoaded', () => {
             fetchShops();
         });
