@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boof - Dükkan Detayı</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts: Syne + DM Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * { font-family: 'DM Sans', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Syne', sans-serif; font-weight: 700; }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1a0a3e 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+
+        .glass-effect {
+            background: rgba(30, 41, 59, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
+        /* ===== Header ===== */
+        .app-header {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+
+        .back-btn {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            transition: all 0.25s ease;
+        }
+
+        .back-btn:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            background: rgba(99, 102, 241, 0.15);
+            transform: translateX(-2px);
+        }
+
+        /* ===== Shop Hero Card ===== */
+        .shop-hero-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(26, 10, 62, 0.6) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            box-shadow: 0 8px 32px rgba(99, 102, 241, 0.05);
+        }
+
+        .shop-large-icon {
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, #312e81 0%, #4c1d95 100%);
+            width: 5rem;
+            height: 5rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(167, 139, 250, 0.3);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .category-tag {
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+        }
+
+        /* ===== QR Notice Panel ===== */
+        .qr-lock-panel {
+            background: rgba(30, 41, 59, 0.45);
+            border: 1px dashed rgba(251, 191, 36, 0.3);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.03);
+        }
+
+        /* ===== Review Cards ===== */
+        .review-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-radius: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .review-card:hover {
+            border-color: rgba(99, 102, 241, 0.2);
+            background: rgba(30, 41, 59, 0.65);
+        }
+
+        .verified-user-badge {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            color: #86efac;
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.1rem 0.4rem;
+            border-radius: 999px;
+        }
+
+        /* ===== Skeletons ===== */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(51,65,85,0.4) 25%, rgba(71,85,105,0.5) 37%, rgba(51,65,85,0.4) 63%);
+            background-size: 400% 100%;
+            animation: skeleton-loading 1.4s ease infinite;
+        }
+
+        @keyframes skeleton-loading {
+            0% { background-position: 100% 50%; }
+            100% { background-position: 0 50%; }
+        }
+
+        .skeleton-text { height: 1.25rem; border-radius: 4px; }
+        .skeleton-block { height: 6rem; border-radius: 16px; }
+
+        .empty-reviews {
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid rgba(148, 163, 184, 0.08);
+            border-radius: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== HEADER ===== -->
+    <header class="app-header px-4 py-3">
+        <div class="max-w-3xl mx-auto flex items-center justify-between">
+            <a href="/index.html" class="back-btn" aria-label="Geri">
+                <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="text-md font-bold text-slate-200">Dükkan Detayı</h1>
+            <div class="w-10"></div> <!-- Simetri koruyucu boşluk -->
+        </div>
+    </header>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="max-w-3xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- ===== SHOP HERO SECTION (SKELETON & REAL) ===== -->
+        <div id="shopHeroSkeleton" class="space-y-4 p-5 glass-effect rounded-2xl">
+            <div class="flex items-center gap-4">
+                <div class="skeleton w-20 h-20 rounded-2xl"></div>
+                <div class="space-y-2 flex-1">
+                    <div class="skeleton skeleton-text w-3/4"></div>
+                    <div class="skeleton skeleton-text w-1/4"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="shopHero" class="shop-hero-card p-5 rounded-2xl hidden">
+            <div class="flex items-start gap-4">
+                <div class="shop-large-icon" id="shopIcon">🏪</div>
+                <div class="flex-1 space-y-2">
+                    <div class="flex items-center gap-2">
+                        <span class="category-tag" id="shopCategory">Yükleniyor...</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-white" id="shopName">Dükkan Adı</h2>
+                    
+                    <div class="flex items-center gap-4 text-sm mt-1">
+                        <div class="flex items-center gap-1 font-bold text-amber-400">
+                            ⭐ <span id="shopRating">—</span>
+                        </div>
+                        <span class="text-slate-400" id="shopReviewCount">0 Yorum</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== QR LOCK WARNING PANEL ===== -->
+        <div class="qr-lock-panel rounded-xl p-5 text-center space-y-3">
+            <div class="text-3xl">🔒</div>
+            <h3 class="text-sm font-bold text-amber-400">Yorum yapmak için dükkandaki QR kodu okutman gerekiyor</h3>
+            <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                Doğrulama sonrası 24 saat boyunca dükkana doğrulanmış (XP kazandıran) yorum yapabilirsin.
+            </p>
+        </div>
+
+        <!-- ===== REVIEWS SECTION ===== -->
+        <div class="space-y-4">
+            <h3 class="text-md font-bold text-slate-300">Yorumlar</h3>
+
+            <!-- Review Skeletons -->
+            <div id="reviewsSkeleton" class="space-y-3">
+                <div class="skeleton skeleton-block"></div>
+                <div class="skeleton skeleton-block"></div>
+            </div>
+
+            <!-- Real Reviews Container -->
+            <div id="reviewsContainer" class="space-y-3 hidden"></div>
+
+            <!-- Empty State -->
+            <div id="emptyReviews" class="empty-reviews text-center p-8 hidden">
+                <div class="text-3xl mb-2 text-slate-500">💬</div>
+                <p class="text-sm font-semibold text-slate-400">Henüz yorum yapılmamış</p>
+                <p class="text-xs text-slate-500 mt-1">Bu dükkan hakkında ilk yorumu sen yap!</p>
+            </div>
+        </div>
+
+        <p class="text-center text-xs text-slate-600 pt-6">
+            © 2026 Highly - Her hakkı saklıdır.
+        </p>
+    </main>
+
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // ==========================================================
+        // CONFIGURATION
+        // ==========================================================
+        const SUPABASE_URL = 'https://nrhevyjcbzoqmnqmiuvt.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaGV2eWpjYnpvcW1ucW1pdXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1MDYzODMsImV4cCI6MjA5ODA4MjM4M30.Q0BhfWbyOKOCC9rDxzTjDPS0h0jJtUGZfL71Jj9bR90'; 
+
+        // Kilitlenmeyi önleyen sihirli değişken adı!
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Kategori emoji eşleşmesi
+        const CATEGORY_ICONS = {
+            'Kafe': '☕',
+            'Restoran': '🍽️',
+            'Mağaza': '🛍️',
+            'Berber': '💈',
+            'Tamirci': '🔧',
+            'Kuru Temizleme': '🧺',
+            'Güzellik Salonu': '💅'
+        };
+
+        // URL'den ID'yi yakalayalım
+        function getShopIdFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            return parseInt(params.get('id'), 10);
+        }
+
+        // ==========================================================
+        // DATA FETCHING: Güvenli ve Kırılmaz Akış
+        // ==========================================================
+        async function fetchShopDetail() {
+            const shopId = getShopIdFromUrl();
+            if (!shopId || isNaN(shopId)) {
+                showErrorState("Geçersiz dükkan ID'si.");
+                return;
+            }
+
+            try {
+                // 1) Dükkan temel bilgilerini çekelim
+                const { data: shop, error: shopError } = await supabaseClient
+                    .from('shops')
+                    .select('*')
+                    .eq('id', shopId)
+                    .single();
+
+                if (shopError) throw shopError;
+                if (!shop) throw new Error("Dükkan bulunamadı.");
+
+                // 2) Bu dükkana atılan tüm yorumları çekmeyi deneyelim
+                let reviews = [];
+                try {
+                    const { data: fetchedReviews, error: reviewsError } = await supabaseClient
+                        .from('reviews')
+                        .select('*')
+                        .eq('shop_id', shopId);
+
+                    if (!reviewsError && fetchedReviews) {
+                        reviews = fetchedReviews;
+                    }
+                } catch (reviewEx) {
+                    console.warn("Yorum tablosu boş veya izin kilidine takıldı:", reviewEx);
+                }
+
+                // 3) Yorumu atan kişilerin kullanıcı adlarını profiles tablosundan güvenle eşleştirelim
+                const userIds = [...new Set(reviews.map(r => r.user_id).filter(Boolean))];
+                let profilesMap = {};
+                
+                if (userIds.length > 0) {
+                    try {
+                        const { data: profiles, error: profilesError } = await supabaseClient
+                            .from('profiles')
+                            .select('id, username, full_name')
+                            .in('id', userIds);
+
+                        if (!profilesError && profiles) {
+                            profiles.forEach(p => {
+                                profilesMap[p.id] = p;
+                            });
+                        }
+                    } catch (profilesEx) {
+                        console.warn("Profil tablosu bilgileri eşleştirilemedi:", profilesEx);
+                    }
+                }
+
+                // 4) Dükkanı ve yorumları ekrana basalım
+                renderShopHero(shop, reviews);
+                renderReviews(reviews, profilesMap);
+
+            } catch (err) {
+                console.error("Dükkan detayları yüklenemedi:", err);
+                showErrorState(err.message || "Bağlantı hatası oluştu.");
+            }
+        }
+
+        // ==========================================================
+        // RENDERING
+        // ==========================================================
+        function renderShopHero(shop, reviews) {
+            // Ortalama Puan Hesaplama
+            let avgRating = "—";
+            if (reviews.length > 0) {
+                const total = reviews.reduce((sum, r) => sum + r.rating, 0);
+                avgRating = (total / reviews.length).toFixed(1);
+            }
+
+            document.getElementById('shopIcon').textContent = CATEGORY_ICONS[shop.category] || '🏪';
+            document.getElementById('shopCategory').textContent = shop.category || 'Dükkan';
+            document.getElementById('shopName').textContent = shop.shop_name || 'Bilinmeyen Dükkan';
+            document.getElementById('shopRating').textContent = avgRating;
+            document.getElementById('shopReviewCount').textContent = `${reviews.length} Yorum`;
+
+            // Görünürlüğü ayarla
+            document.getElementById('shopHeroSkeleton').classList.add('hidden');
+            document.getElementById('shopHero').classList.remove('hidden');
+        }
+
+        function renderReviews(reviews, profilesMap) {
+            const container = document.getElementById('reviewsContainer');
+            const skeleton = document.getElementById('reviewsSkeleton');
+            const emptyState = document.getElementById('emptyReviews');
+
+            skeleton.classList.add('hidden');
+
+            if (!reviews || reviews.length === 0) {
+                emptyState.classList.remove('hidden');
+                container.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            container.classList.remove('hidden');
+
+            container.innerHTML = reviews.map(review => {
+                const profile = profilesMap[review.user_id] || {};
+                const reviewerName = profile.full_name || profile.username || 'Anonim Müşteri';
+                const stars = '⭐'.repeat(review.rating);
+                
+                // Tarih formatlama
+                const dateObj = new Date(review.created_at);
+                const formattedDate = dateObj.toLocaleDateString('tr-TR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+
+                return `
+                    <div class="review-card p-4 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-sm text-slate-200">${escapeHtml(reviewerName)}</span>
+                                ${review.is_verified ? '<span class="verified-user-badge">✓ Doğrulandı</span>' : ''}
+                            </div>
+                            <span class="text-xs text-slate-500">${formattedDate}</span>
+                        </div>
+                        <div class="text-amber-400 text-xs">${stars}</div>
+                        <p class="text-sm text-slate-300 leading-relaxed pt-1">
+                            ${escapeHtml(review.comment || 'Puan verildi.')}
+                        </p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Basit XSS koruması
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str || '';
+            return div.innerHTML;
+        }
+
+        function showErrorState(message) {
+            document.getElementById('shopHeroSkeleton').innerHTML = `
+                <div class="text-center py-4 text-rose-400">
+                    <p class="font-bold">Hata Oluştu!</p>
+                    <p class="text-xs mt-1 text-slate-400">${escapeHtml(message)}</p>
+                </div>
+            `;
+            document.getElementById('reviewsSkeleton').classList.add('hidden');
+        }
+
+        // Başlangıç tetiği
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchShopDetail();
+        });
+    </script>
+</body>
+</html>
