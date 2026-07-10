@@ -311,18 +311,18 @@
         </p>
     </main>
 
-    <!-- Supabase Client Library -->
+        <!-- Supabase Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
         // ==========================================================
         // CONFIGURATION
         // ==========================================================
-        // DÜZELTİLDİ: URL artık doğrudan "nrhevyjcbzoqmnqmiuvt" projesine bakıyor!
         const SUPABASE_URL = 'https://nrhevyjcbzoqmnqmiuvt.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaGV2eWpjYnpvcW1ucW1pdXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1MDYzODMsImV4cCI6MjA5ODA4MjM4M30.Q0BhfWbyOKOCC9rDxzTjDPS0h0jJtUGZfL71Jj9bR90'; 
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // ÇAKIŞMAYI ÖNLEMEK İÇİN İSMİ DEĞİŞTİRDİK: supabase yerine supabaseClient yaptık!
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // ==========================================================
         // STATE
@@ -342,23 +342,23 @@
         };
 
         // ==========================================================
-        // VERİ ÇEKME: Güvenli Hata Yönetimli Fetch (Yorum yoksa bile çalışır)
+        // VERİ ÇEKME
         // ==========================================================
         async function fetchShops() {
             showLoading(true);
 
             try {
-                // 1) Tüm dükkanları çek (Burası ana kemik)
-                const { data: shops, error: shopsError } = await supabase
+                // Burada da supabaseClient kullandık
+                const { data: shops, error: shopsError } = await supabaseClient
                     .from('shops')
                     .select('*');
 
                 if (shopsError) throw shopsError;
 
-                // 2) Yorumları çekmeyi dene
                 let reviews = [];
                 try {
-                    const { data: fetchedReviews, error: reviewsError } = await supabase
+                    // Burada da supabaseClient kullandık
+                    const { data: fetchedReviews, error: reviewsError } = await supabaseClient
                         .from('reviews')
                         .select('shop_id, rating, is_verified');
                     
@@ -366,7 +366,7 @@
                         reviews = fetchedReviews;
                     }
                 } catch (reviewEx) {
-                    console.warn("Yorumlar alınamadı veya tablo boş, dükkanlar listelenmeye devam ediyor:", reviewEx);
+                    console.warn("Yorumlar alınamadı veya tablo boş:", reviewEx);
                 }
 
                 const ratingMap = {}; 
@@ -397,7 +397,7 @@
 
             } catch (err) {
                 console.error('Dükkanlar yüklenirken hata:', err);
-                showErrorState(err.message || 'Supabase projesine bağlanılamadı.');
+                showErrorState(err.message || 'Veritabanı bağlantı hatası.');
             } finally {
                 showLoading(false);
             }
@@ -510,5 +510,3 @@
             fetchShops();
         });
     </script>
-</body>
-</html>
