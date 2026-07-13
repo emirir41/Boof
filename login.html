@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boof - Giriş Yap / Kayıt Ol</title>
+    <title>Buff - Giriş Yap / Kayıt Ol</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -135,7 +135,7 @@
             font-size: 0.875rem;
         }
         
-        .success-message.show { display: block; }
+        .error-message.show, .success-message.show { display: block; }
         
         .loading-spinner {
             display: inline-block;
@@ -163,9 +163,9 @@
     <div class="auth-container glass-effect rounded-2xl w-full max-w-md p-8 shadow-2xl">
         
         <div class="text-center mb-8">
-            <div class="star-motif text-center">✦</div>
+            <div class="star-motif text-center text-indigo-400">✦</div>
             <h1 class="text-3xl font-bold mb-2 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-                Boof
+                Buff
             </h1>
             <p class="text-sm text-slate-400">Güvenilir Yorum Platformu</p>
         </div>
@@ -300,7 +300,6 @@
             textSpan.innerHTML = isLoading ? '<span class="loading-spinner"></span>Yükleniyor...' : defaultText;
         }
 
-        // AKILLI YÖNLENDİRME FONKSİYONU
         function redirectUser() {
             const params = new URLSearchParams(window.location.search);
             const redirectTo = params.get('redirect');
