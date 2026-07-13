@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boof - Esnaf Paneli</title>
+    <title>Buff - Esnaf Paneli</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Syne + DM Sans -->
@@ -26,14 +26,19 @@
             background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
             transition: all 0.3s ease;
         }
-        .gradient-btn:hover {
+        .gradient-btn:hover:not(:disabled) {
             box-shadow: 0 0 25px rgba(99, 102, 241, 0.4);
             transform: translateY(-1px);
         }
+        #qrcode {
+            display: inline-block;
+            padding: 12px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
         #qrcode img {
             margin: 0 auto;
-            border-radius: 12px;
-            border: 4px solid white;
         }
     </style>
 </head>
@@ -41,9 +46,9 @@
 
     <main class="w-full max-w-md glass-card rounded-2xl p-6 text-center shadow-2xl">
         <div class="mb-6">
-            <span class="text-xs font-bold tracking-widest text-indigo-400 uppercase">Boof Business</span>
-            <h1 class="text-2xl font-extrabold text-white mt-1">Dinamik QR Oluşturucu</h1>
-            <p class="text-xs text-slate-400 mt-1">Müşterilerinize göstermek için anlık kod üretin.</p>
+            <span class="text-xs font-bold tracking-widest text-indigo-400 uppercase">Buff Business</span>
+            <h1 class="text-2xl font-extrabold text-white mt-1" id="panelTitle">Dinamik QR Oluşturucu</h1>
+            <p class="text-xs text-slate-400 mt-1" id="shopNameSub">Müşterilerinize göstermek için anlık kod üretin.</p>
         </div>
 
         <!-- QR ve Kod Gösterim Alanı -->
@@ -62,15 +67,15 @@
             </div>
         </div>
 
-        <!-- Placeholder -->
+        <!-- Placeholder / Durum Mesajları -->
         <div id="placeholderArea" class="py-12 border-2 border-dashed border-slate-700 rounded-xl my-6 flex flex-col items-center justify-center text-slate-500 text-sm">
-            <span>📷</span>
-            <span class="mt-2">Henüz aktif bir kod üretilmedi.</span>
+            <span id="placeholderIcon">📷</span>
+            <span id="placeholderText" class="mt-2 px-4">Kontroller sağlanıyor...</span>
         </div>
 
         <!-- Kod Üretme Butonu -->
-        <button id="generateBtn" onclick="generateNewCode()" class="gradient-btn w-full py-3.5 rounded-xl font-bold text-white shadow-lg">
-            ⚡ Yeni Kod & QR Üret
+        <button id="generateBtn" disabled onclick="generateNewCode()" class="gradient-btn w-full py-3.5 rounded-xl font-bold text-white shadow-lg opacity-50 cursor-not-allowed">
+            Yükleniyor...
         </button>
 
     </main>
@@ -81,15 +86,65 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <script>
-        // CONFIGURATION
         const SUPABASE_URL = 'https://nrhevyjcbzoqmnqmiuvt.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaGV2eWpjYnpvcW1ucW1pdXZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1MDYzODMsImV4cCI6MjA5ODA4MjM4M30.Q0BhfWbyOKOCC9rDxzTjDPS0h0jJtUGZfL71Jj9bR90';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaGV2eWpjYnpvcW1ucW1pdXZ0Iiwicm9sZSI6ImFub24iLAJpYXQiOjE3ODI1MDYzODMsImV4cCI6MjA5ODA4MjM4M30.Q0BhfWbyOKOCC9rDxzTjDPS0h0jJtUGZfL71Jj9bR90';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const CURRENT_SHOP_ID = 1; 
-
+        let myShopId = null; 
         let timerInterval = null;
-        let qrGenerator = null;
+
+        // SAYFA AÇILDIĞINDA OTOMATİK KONTROL ET
+        async function checkMerchantAuth() {
+            const btn = document.getElementById('generateBtn');
+            const pText = document.getElementById('placeholderText');
+            const pIcon = document.getElementById('placeholderIcon');
+
+            // 1. Giriş yapmış kullanıcı var mı?
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) {
+                pIcon.textContent = "🔒";
+                pText.textContent = "Bu paneli kullanmak için önce esnaf hesabı ile giriş yapmalısın.";
+                btn.textContent = "Giriş Sayfasına Git";
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.onclick = () => { window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname); };
+                return;
+            }
+
+            try {
+                // 2. Giriş yapan kullanıcının dükkanını çek (shops tablosunda owner_id veya user_id olarak eşleştiğini varsayıyoruz)
+                // Eğer senin veritabanında sütun adı farklıysa (örn: user_id yerine owner_id ise) alt satırı ona göre güncelle ağa
+                const { data: shop, error: shopError } = await supabaseClient
+                    .from('shops')
+                    .select('id, shop_name')
+                    .eq('user_id', user.id) 
+                    .single();
+
+                if (shopError || !shop) {
+                    pIcon.textContent = "⚠️";
+                    pText.textContent = "Hesabınıza tanımlı bir dükkan bulunamadı. Lütfen sistem yöneticisiyle görüşün.";
+                    btn.textContent = "Dükkan Bulunamadı";
+                    return;
+                }
+
+                // 3. Dükkan bulunduysa ID'yi hafızaya al ve arayüzü güncelle
+                myShopId = shop.id;
+                document.getElementById('panelTitle').textContent = shop.shop_name;
+                document.getElementById('shopNameSub').textContent = "Esnaf Yönetim Paneli";
+                
+                pIcon.textContent = "✨";
+                pText.textContent = "Dükkanınız başarıyla doğrulandı. Yeni kod üretmeye hazırsınız.";
+                
+                // Butonu aktif et
+                btn.disabled = false;
+                btn.innerHTML = '⚡ Yeni Kod & QR Üret';
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btn.setAttribute('onclick', 'generateNewCode()');
+
+            } catch (err) {
+                pText.textContent = "Bir hata oluştu: " + err.message;
+            }
+        }
 
         function generateRandomToken() {
             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -101,6 +156,8 @@
         }
 
         async function generateNewCode() {
+            if (!myShopId) { alert("Dükkan kimliği doğrulanmadı!"); return; }
+
             const btn = document.getElementById('generateBtn');
             btn.disabled = true;
             btn.textContent = 'Üretiliyor...';
@@ -109,24 +166,22 @@
             document.getElementById('qrcode').innerHTML = '';
 
             try {
-                // VERİTABANI TEMİZLİĞİ: Süresi dolmuş (expires_at < şu an) olan tüm eski kodları uçuruyoruz
-                const nowIso = new Date().toISOString();
-                await supabaseClient
-                    .from('qr_codes')
-                    .delete()
-                    .lt('expires_at', nowIso);
+                // Eski süresi dolanları temizle
+                try {
+                    const nowIso = new Date().toISOString();
+                    await supabaseClient.from('qr_codes').delete().lt('expires_at', nowIso);
+                } catch (e) { console.log(e); }
 
-                // Yeni Değerleri Hazırla
                 const token = generateRandomToken();
                 const now = new Date();
-                const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 Dakika Sonrası
+                const expiresAt = new Date(now.getTime() + 5 * 60 * 1000); // 5 Dakika geçerli
 
-                // Yeni kodu ekle
+                // Kodu ARTIK TAMAMEN DİNAMİK OLAN myShopId ile ekliyoruz
                 const { error } = await supabaseClient
                     .from('qr_codes')
                     .insert([
                         {
-                            shop_id: CURRENT_SHOP_ID,
+                            shop_id: myShopId,
                             code_token: token,
                             is_used: false,
                             expires_at: expiresAt.toISOString()
@@ -135,19 +190,23 @@
 
                 if (error) throw error;
 
-                // UI Güncelleme
                 document.getElementById('placeholderArea').classList.add('hidden');
                 document.getElementById('codeDisplayArea').classList.remove('hidden');
                 document.getElementById('tokenText').textContent = token;
 
-                // QR Kod Link Yapısı (qr-entry dosyasına otomatik parametre fırlatacak)
-                const targetUrl = `${window.location.origin}/qr-entry.html?code=${token}`;
+                let targetUrl = "";
+                if (window.location.protocol === 'file:') {
+                    targetUrl = `https://buff.highly.com.tr/qr-entry.html?code=${token}`;
+                } else {
+                    const basePath = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+                    targetUrl = `${basePath}/qr-entry.html?code=${token}`;
+                }
 
-                qrGenerator = new QRCode(document.getElementById('qrcode'), {
+                new QRCode(document.getElementById('qrcode'), {
                     text: targetUrl,
                     width: 180,
                     height: 180,
-                    colorDark : "#0f172a",
+                    colorDark : "#000000",
                     colorLight : "#ffffff",
                     correctLevel : QRCode.CorrectLevel.H
                 });
@@ -155,8 +214,7 @@
                 startCountdown(5 * 60);
 
             } catch (err) {
-                console.error('Kod üretim hatası:', err);
-                alert('Kod üretilirken bir hata oluştu.');
+                alert('Kod üretilirken bir hata oluştu: ' + err.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '⚡ Yeni Kod & QR Üret';
@@ -189,6 +247,9 @@
                 }
             }, 1000);
         }
+
+        // Sayfa yüklenince kontrol mekanizmasını tetikle
+        document.addEventListener('DOMContentLoaded', () => { checkMerchantAuth(); });
     </script>
 </body>
 </html>
